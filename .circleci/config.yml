@@ -10,7 +10,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: yarndeps-{{ .Branch }}-{{ checksum "yarn.lock" }
+          key: yarndeps-{{ .Branch }}-{{ checksum "yarn.lock" }}
       - run:
           name: Installing javascript dependencies
           command: yarn install --cache-folder ~/.yarn-cache
