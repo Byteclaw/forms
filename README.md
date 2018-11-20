@@ -8,12 +8,91 @@ Easily create complex forms in [React](https://github.com/facebook/react).
 ## Installation
 
 ```console
-npm install @napred/forms
+npm install @napred/forms yup
 
 # or using yarn
 
-yarn add @napred/forms
+yarn add @napred/forms yup
 ```
+
+## Requirements
+
+- `react >= 16.7.0`
+
+## Up and running example
+
+```js
+import { Fragment } from 'react';
+import { ArrayField, Field, Form, FormProvider, ObjectField } from '@napred/forms';
+import * as yup from 'yup';
+
+const validator = yup.object().shape({
+  productTitle: yup.string().required(),
+  images: yup
+    .array()
+    .of(
+      yup.object().shape({
+        title: yup.string().required(),
+        url: yup
+          .string()
+          .url()
+          .required(),
+      }),
+    )
+    .required(),
+  attributes: yup.object().shape({
+    color: yup
+      .string()
+      .matches(/^#[0-9a-fA-F]{6}$/)
+      .required(),
+  }),
+});
+
+<Form onSubmit={async values => {}} validationSchema={validator}>
+  {/* global error of form */}
+  <FieldError name="">{({ error }) => error || null}</FieldError>
+  <Field name="productTitle" />
+  <FieldError name="productTitle">{({ error }) => error || null}</FieldError>
+  <ArrayField name="images">
+    {({ value, addItem, removeItem }) => (
+      <Fragment>
+        {/* value can be undefined/null if is not initialized */}
+        {(value || []).map((val, i) => (
+          <ObjectField name={i}>
+            <Field name="url" type="url" />
+            <FieldError name="url">{({ error }) => error || null}</FieldError>
+            <Field name="title" />
+            <FieldError name="title">{({ error }) => error || null}</FieldError>
+            <button onClick={() => removeItem(i)} type="button">
+              Remove
+            </button>
+          </ObjectField>
+        ))}
+        <button onClick={() => addItem()} type="button">
+          Add image
+        </button>
+      </Fragment>
+    )}
+  </ArrayField>
+  <FieldError name="images">{({ error }) => error || null}</FieldError>
+  <ObjectField name="attributes">
+    <Field name="color" />
+    <FieldError name="color">{({ error }) => error || null}</FieldError>
+  </ObjectField>
+  <FieldError name="attributes">{({ error }) => error || null}</FieldError>
+  <FormProvider>
+    {form => (
+      <button disabled={form.changing || form.submitting || form.validating} type="submit">
+        Save
+      </button>
+    )}
+  </FormProvider>
+</Form>;
+```
+
+## Examples
+
+- [Simple Form](./examples/SimpleForm.md)
 
 ## Contributors
 
