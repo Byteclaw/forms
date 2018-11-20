@@ -99,7 +99,6 @@
     "prebuild": "rimraf dist",
     "prepublishOnly": "npm run build",
     "precommit": "lint-staged",
-    "release": "release-it --disable-metrics",
     "size": "bundlesize",
     "test": "jest --watch --coverage",
     "test:ci": "jest --ci --coverage"
