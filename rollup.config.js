@@ -8,21 +8,22 @@ import { terser } from 'rollup-plugin-terser';
 import sourceMaps from 'rollup-plugin-sourcemaps';
 import pkg from './package.json';
 
-const cjs = {
-  exports: 'named',
-  format: 'cjs',
-  sourcemap: true,
+const input = 'src/index.js';
+const external = id => !id.startsWith('\0') && !id.startsWith('.') && !id.startsWith('/');
+const name = 'NapredForms';
+
+const babelCJS = {
+  presets: [['@babel/preset-env'], '@babel/preset-react'],
+  exclude: /node_modules/,
+};
+const babelESM = {
+  runtimeHelpers: true,
+  presets: [['@babel/preset-env'], '@babel/preset-react'],
+  plugins: [['@babel/transform-runtime', { useESModules: true }]],
+  exclude: /node_modules/,
 };
 
-const esm = {
-  format: 'esm',
-  sourcemap: true,
-};
-
-const getCJS = override => ({ ...cjs, ...override });
-const getESM = override => ({ ...esm, ...override });
-
-const commonPlugins = [
+const commonPlugins = babelConfig => [
   flow({
     // needed for sourcemaps to be properly generated
     pretty: true,
@@ -30,10 +31,7 @@ const commonPlugins = [
   sourceMaps(),
   json(),
   nodeResolve(),
-  babel({
-    exclude: 'node_modules/**',
-    plugins: ['external-helpers'],
-  }),
+  babel(babelConfig),
   commonjs({
     ignoreGlobal: true,
   }),
@@ -51,49 +49,59 @@ const prodPlugins = [
   }),
 ];
 
-const configBase = {
-  input: './src/index.js',
-
-  // \0 is rollup convention for generated in memory modules
-  external: id => !id.startsWith('\0') && !id.startsWith('.') && !id.startsWith('/'),
-  plugins: commonPlugins,
-};
-
 const globals = { react: 'React' };
-
-const standaloneBaseConfig = {
-  ...configBase,
+const umdBase = {
+  input,
+  external: Object.keys(globals),
   output: {
-    file: 'dist/forms.js',
     format: 'umd',
     globals,
-    name: 'forms',
+    name,
     sourcemap: true,
   },
-  external: Object.keys(globals),
+  plugins: commonPlugins(babelESM),
 };
 
-const standaloneConfig = {
-  ...standaloneBaseConfig,
-  plugins: standaloneBaseConfig.plugins.concat(
+const umdDevConfig = {
+  ...umdBase,
+  output: {
+    ...umdBase.output,
+    file: 'dist/forms.umd.js',
+  },
+  plugins: umdBase.plugins.concat(
     replace({
       'process.env.NODE_ENV': JSON.stringify('development'),
     }),
   ),
 };
 
-const standaloneProdConfig = {
-  ...standaloneBaseConfig,
+const umdProdConfig = {
+  ...umdBase,
   output: {
-    ...standaloneBaseConfig.output,
-    file: 'dist/forms.min.js',
+    ...umdBase.output,
+    file: 'dist/forms.umd.min.js',
   },
-  plugins: standaloneBaseConfig.plugins.concat(prodPlugins),
+  plugins: umdBase.plugins.concat(prodPlugins),
 };
 
-const nodeConfig = {
-  ...configBase,
-  output: [getESM({ file: 'dist/forms.esm.js' }), getCJS({ file: 'dist/forms.cjs.js' })],
+const cjsConfig = {
+  input,
+  external,
+  output: {
+    file: 'dist/forms.cjs.js',
+    format: 'cjs',
+  },
+  plugins: commonPlugins(babelCJS),
 };
 
-export default [standaloneConfig, standaloneProdConfig, nodeConfig];
+const esmConfig = {
+  input,
+  external,
+  output: {
+    file: 'dist/forms.esm.js',
+    format: 'esm',
+  },
+  plugins: commonPlugins(babelESM),
+};
+
+export default [umdDevConfig, umdProdConfig, cjsConfig, esmConfig];
