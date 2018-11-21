@@ -4,7 +4,8 @@
 import React, { Fragment } from 'react';
 import { fireEvent, render, wait } from 'react-testing-library';
 import useField from '../useField';
-import { FormContext, type Form } from '../formContext';
+import { FormContext } from '../formContext';
+import type { Form } from '../useForm';
 
 function Input({
   currentValue,

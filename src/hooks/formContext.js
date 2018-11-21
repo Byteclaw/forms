@@ -6,8 +6,6 @@ import type { Form } from './useForm';
 import type { Field as ArrayField } from './useArrayField';
 import type { Field as ObjectField } from './useObjectField';
 
-export type { Form };
-
 export const FormContext: Context<Form> = createContext(
   ({
     errors: {},

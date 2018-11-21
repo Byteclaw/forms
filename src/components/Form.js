@@ -14,6 +14,7 @@ type Props = {
   children: ?(FormRenderer | Node),
   initialValues: Object,
   onSubmit: OnSubmitFn,
+  validateOnChange?: boolean,
   validationSchema: any,
 };
 
@@ -22,10 +23,11 @@ export default function Form({
   children,
   initialValues,
   onSubmit,
+  validateOnChange,
   validationSchema,
   ...rest
 }: Props) {
-  const form = useForm(initialValues, onSubmit, validationSchema);
+  const form = useForm(initialValues, onSubmit, validationSchema, validateOnChange);
 
   return (
     <form.FormProvider value={form}>
