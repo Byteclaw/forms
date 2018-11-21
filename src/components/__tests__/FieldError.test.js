@@ -68,7 +68,7 @@ describe('FieldError component', () => {
 
       await wait(() => expect(getByTestId('validating').innerHTML).toBe('false'));
 
-      expect(renderMock).toHaveBeenCalledTimes(6);
+      expect(renderMock).toHaveBeenCalledTimes(7);
       expect(renderMock).toHaveBeenLastCalledWith({
         dirty: false,
         error: 'test is a required field',
