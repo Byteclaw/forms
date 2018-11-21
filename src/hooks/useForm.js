@@ -69,7 +69,7 @@ export default function useForm(
 
         const values = await validator.validate(value, { abortEarly: false });
 
-        setFormState(current => ({ ...current, valid: true, validating: false }));
+        setFormState(current => ({ ...current, errors: {}, valid: true, validating: false }));
 
         return values;
       } catch (e) {
