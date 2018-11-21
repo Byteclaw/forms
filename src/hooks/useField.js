@@ -3,6 +3,7 @@
 import debounce from 'lodash.debounce';
 // $FlowFixMe
 import { useCallback, useMemo, useState } from 'react';
+import useConnectedForm from './useConnectedForm';
 
 export type FieldState = {
   dirty: Set<string | number>,
@@ -83,6 +84,7 @@ export default function useField<TError>(
     onFocusChange = noop,
   }: FieldSettings = {},
 ): Field<TError> {
+  const form = useConnectedForm();
   const [state, setState]: [FieldState, Function] = useState({
     dirty: new Set(),
     changing: new Set(),
@@ -137,6 +139,11 @@ export default function useField<TError>(
   );
   const setValue: SetValueFn = useCallback(
     newValue => {
+      // ignore change if form is submitting/validating
+      if (form.submitting || form.validating) {
+        return;
+      }
+
       // set value marks field as changing and sets it as not changing in debounced callback
       setState(currentState => {
         const value = typeof newValue === 'function' ? newValue(currentState) : newValue;
@@ -155,7 +162,7 @@ export default function useField<TError>(
         };
       });
     },
-    [true],
+    [form.submitting, form.validating],
   );
 
   // change initial value if it has changed

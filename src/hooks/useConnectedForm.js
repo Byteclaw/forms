@@ -2,11 +2,11 @@
 
 // $FlowFixMe
 import { useContext } from 'react';
-import { FormFieldContext } from './formContext';
+import { FormContext } from './formContext';
 import type { Form } from './useForm';
 
 export type { Form };
 
 export default function useConnectedForm(): Form {
-  return useContext(FormFieldContext);
+  return useContext(FormContext);
 }

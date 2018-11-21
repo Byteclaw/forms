@@ -4,6 +4,7 @@
 import React, { Fragment } from 'react';
 import { fireEvent, render, wait } from 'react-testing-library';
 import useField from '../useField';
+import { FormContext, type Form } from '../formContext';
 
 function Input({
   currentValue,
@@ -50,17 +51,21 @@ describe('useField hook', () => {
     const onChangingChangeMock = jest.fn();
     const onFocusChangeMock = jest.fn();
     const { getByTestId, rerender } = render(
-      <Input
-        onChange={onChangeMock}
-        onChangingChange={onChangingChangeMock}
-        onFocusChange={onFocusChangeMock}
-      />,
+      <FormContext.Provider
+        value={({ errors: {}, submitting: false, valid: true, validating: false }: $Shape<Form>)}
+      >
+        <Input
+          onChange={onChangeMock}
+          onChangingChange={onChangingChangeMock}
+          onFocusChange={onFocusChangeMock}
+        />
+      </FormContext.Provider>,
     );
 
     expect(onFocusChangeMock).toHaveBeenCalledTimes(1);
-    expect(onFocusChangeMock).toHaveBeenCalledWith(false);
+    expect(onFocusChangeMock).toHaveBeenLastCalledWith(false);
     expect(onChangingChangeMock).toHaveBeenCalledTimes(1);
-    expect(onChangingChangeMock).toHaveBeenCalledWith(false);
+    expect(onChangingChangeMock).toHaveBeenLastCalledWith(false);
 
     expect(getByTestId('dirty').innerHTML).toBe('false');
     expect(getByTestId('changing').innerHTML).toBe('false');
@@ -74,19 +79,19 @@ describe('useField hook', () => {
     expect(getByTestId('focused').innerHTML).toBe('true');
     expect(getByTestId('touched').innerHTML).toBe('true');
     expect(onFocusChangeMock).toHaveBeenCalledTimes(2);
-    expect(onFocusChangeMock).toHaveBeenCalledWith(true);
+    expect(onFocusChangeMock).toHaveBeenLastCalledWith(true);
 
     fireEvent.blur(getByTestId('input'));
 
     expect(getByTestId('focused').innerHTML).toBe('false');
     expect(getByTestId('touched').innerHTML).toBe('true');
     expect(onFocusChangeMock).toHaveBeenCalledTimes(3);
-    expect(onFocusChangeMock).toHaveBeenCalledWith(false);
+    expect(onFocusChangeMock).toHaveBeenLastCalledWith(false);
 
     // change the value
     fireEvent.change(getByTestId('input'), { target: { value: 'A' } });
     expect(onChangingChangeMock).toHaveBeenCalledTimes(2);
-    expect(onChangingChangeMock).toHaveBeenCalledWith(true);
+    expect(onChangingChangeMock).toHaveBeenLastCalledWith(true);
     fireEvent.change(getByTestId('input'), { target: { value: 'AB' } });
     fireEvent.change(getByTestId('input'), { target: { value: 'ABC' } });
     fireEvent.change(getByTestId('input'), { target: { value: 'ABCD' } });
@@ -99,18 +104,72 @@ describe('useField hook', () => {
     await wait(() => {
       expect(getByTestId('changing').innerHTML).toBe('false');
       expect(onChangingChangeMock).toHaveBeenCalledTimes(3);
-      expect(onChangingChangeMock).toHaveBeenCalledWith(false);
+      expect(onChangingChangeMock).toHaveBeenLastCalledWith(false);
     });
 
     expect(onChangeMock).toHaveBeenCalledTimes(1);
-    expect(onChangeMock).toHaveBeenCalledWith('ABCD');
+    expect(onChangeMock).toHaveBeenLastCalledWith('ABCD');
 
     // now change initial value
-    rerender(<Input initialValue="test-value" onChange={onChangeMock} />);
+    rerender(
+      <FormContext.Provider
+        value={({ errors: {}, submitting: false, valid: true, validating: false }: $Shape<Form>)}
+      >
+        <Input
+          initialValue="test-value"
+          onChange={onChangeMock}
+          onChangingChange={onChangingChangeMock}
+          onFocusChange={onFocusChangeMock}
+        />
+      </FormContext.Provider>,
+    );
 
+    expect(onChangeMock).toHaveBeenCalledTimes(2);
+    expect(onChangeMock).toHaveBeenLastCalledWith('test-value');
     expect(getByTestId('dirty').innerHTML).toBe('false');
     // $FlowFixMe
     expect(getByTestId('input').value).toBe('test-value');
-    expect(getByTestId('initialValue').innerHTML).toBe('test-value');
+
+    // now make form validating and try to change a value
+    rerender(
+      <FormContext.Provider
+        value={({ errors: {}, submitting: false, valid: true, validating: true }: $Shape<Form>)}
+      >
+        <Input
+          initialValue="test-value"
+          onChange={onChangeMock}
+          onChangingChange={onChangingChangeMock}
+          onFocusChange={onFocusChangeMock}
+        />
+      </FormContext.Provider>,
+    );
+
+    fireEvent.change(getByTestId('input'), { target: { value: 'AB' } });
+
+    expect(onChangeMock).toHaveBeenCalledTimes(2);
+    expect(onChangeMock).not.toHaveBeenLastCalledWith('AB');
+    // $FlowFixMe
+    expect(getByTestId('input').value).toBe('test-value');
+
+    // now make form submitting and try to change a value
+    rerender(
+      <FormContext.Provider
+        value={({ errors: {}, submitting: true, valid: true, validating: false }: $Shape<Form>)}
+      >
+        <Input
+          initialValue="test-value"
+          onChange={onChangeMock}
+          onChangingChange={onChangingChangeMock}
+          onFocusChange={onFocusChangeMock}
+        />
+      </FormContext.Provider>,
+    );
+
+    fireEvent.change(getByTestId('input'), { target: { value: 'AB' } });
+
+    expect(onChangeMock).toHaveBeenCalledTimes(2);
+    expect(onChangeMock).not.toHaveBeenLastCalledWith('AB');
+    // $FlowFixMe
+    expect(getByTestId('input').value).toBe('test-value');
   });
 });

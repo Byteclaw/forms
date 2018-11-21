@@ -21,16 +21,18 @@ function Form({
 
   return (
     <form data-testid="form" onSubmit={form.handleSubmit}>
-      <form.Provider value={form}>
-        <Field data-testid="email-input" debounceDelay={2} name="email" type="email" />
-        <Field data-testid="password-input" debounceDelay={20} name="password" type="password" />
-        <ObjectField debounceDelay={2} name="object">
-          <Field data-testid="color-input" debounceDelay={1} name="color" />
-        </ObjectField>
-        <FieldError name="">
-          {({ error }) => <span data-testid="form-error">{error}</span>}
-        </FieldError>
-      </form.Provider>
+      <form.FormProvider value={form}>
+        <form.FieldProvider value={form}>
+          <Field data-testid="email-input" debounceDelay={2} name="email" type="email" />
+          <Field data-testid="password-input" debounceDelay={20} name="password" type="password" />
+          <ObjectField debounceDelay={2} name="object">
+            <Field data-testid="color-input" debounceDelay={1} name="color" />
+          </ObjectField>
+          <FieldError name="">
+            {({ error }) => <span data-testid="form-error">{error}</span>}
+          </FieldError>
+        </form.FieldProvider>
+      </form.FormProvider>
       <span data-testid="changing">{form.changing.toString()}</span>
       <span data-testid="submitting">{form.submitting.toString()}</span>
       <span data-testid="validating">{form.validating.toString()}</span>

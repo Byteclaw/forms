@@ -18,7 +18,7 @@ type Props = {
 };
 
 export default function Form({
-  as,
+  as: As,
   children,
   initialValues,
   onSubmit,
@@ -26,18 +26,19 @@ export default function Form({
   ...rest
 }: Props) {
   const form = useForm(initialValues, onSubmit, validationSchema);
-  const As = as;
-
-  if (typeof children === 'function') {
-    return <form.Provider value={form}>{children(form)}</form.Provider>;
-  }
 
   return (
-    <form.Provider value={form}>
-      <As onSubmit={form.handleSubmit} {...rest}>
-        {children}
-      </As>
-    </form.Provider>
+    <form.FormProvider value={form}>
+      <form.FieldProvider value={form}>
+        {typeof children === 'function' ? (
+          children(form)
+        ) : (
+          <As onSubmit={form.handleSubmit} {...rest}>
+            {children}
+          </As>
+        )}
+      </form.FieldProvider>
+    </form.FormProvider>
   );
 }
 

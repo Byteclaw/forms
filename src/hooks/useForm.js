@@ -5,9 +5,9 @@ import * as yup from 'yup';
 import { useState } from 'react';
 import convertValidationErrors from '../utils/convertValidationErrors';
 import useObjectField, { type Field } from './useObjectField';
-import { FormFieldContext } from './formContext';
+import { FormFieldContext, FormContext } from './formContext';
 
-type FormState = {
+export type FormState = {
   errors: { [key: string]: string },
   submitting: boolean,
   valid: boolean,
@@ -19,7 +19,8 @@ type FormAPI = {
 };
 
 type FormComponents = {
-  Provider: $PropertyType<typeof FormFieldContext, 'Provider'>,
+  FieldProvider: $PropertyType<typeof FormFieldContext, 'Provider'>,
+  FormProvider: $PropertyType<typeof FormContext, 'Provider'>,
 };
 
 export type Form = Field & FormState & FormAPI & FormComponents;
@@ -83,6 +84,7 @@ export default function useForm(
     ...field,
     ...formState,
     handleSubmit,
-    Provider: field.Provider,
+    FieldProvider: field.Provider,
+    FormProvider: FormContext.Provider,
   };
 }
