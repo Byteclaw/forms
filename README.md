@@ -1,7 +1,9 @@
 # @napred/forms
 
-[![CircleCI](https://circleci.com/gh/napred/forms/tree/master.svg?style=svg&circle-token=cff0c20cd6bc5d6d12264982df589e8717a72fd0)](https://circleci.com/gh/napred/forms/tree/master)
+![CircleCI](https://img.shields.io/circleci/project/github/napred/forms/master.svg?style=flat-square)
 [![All Contributors](https://img.shields.io/badge/all_contributors-2-orange.svg?style=flat-square)](#contributors)
+![Version](https://img.shields.io/npm/v/@napred/forms.svg?style=flat-square)
+![License](https://img.shields.io/npm/l/@napred/forms.svg?style=flat-square)
 
 Easily create complex forms in [React](https://github.com/facebook/react).
 
