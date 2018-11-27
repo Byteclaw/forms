@@ -1,44 +1,20 @@
 import nodeResolve from 'rollup-plugin-node-resolve';
 import replace from 'rollup-plugin-replace';
 import commonjs from 'rollup-plugin-commonjs';
-import babel from 'rollup-plugin-babel';
-import json from 'rollup-plugin-json';
-import flow from 'rollup-plugin-flow';
 import { terser } from 'rollup-plugin-terser';
 import sourceMaps from 'rollup-plugin-sourcemaps';
-import pkg from './package.json';
 
-const input = 'src/index.js';
+function onwarn(message) {
+  const suppressed = ['UNRESOLVED_IMPORT', 'THIS_IS_UNDEFINED'];
+
+  if (!suppressed.find(code => message.code === code)) {
+    console.warn(message.message);
+  }
+}
+
+const input = 'dist/index.js';
 const external = id => !id.startsWith('\0') && !id.startsWith('.') && !id.startsWith('/');
-const name = 'NapredForms';
-
-const babelCJS = {
-  presets: [['@babel/preset-env'], '@babel/preset-react'],
-  exclude: /node_modules/,
-};
-const babelESM = {
-  runtimeHelpers: true,
-  presets: [['@babel/preset-env'], '@babel/preset-react'],
-  plugins: [['@babel/transform-runtime', { useESModules: true }]],
-  exclude: /node_modules/,
-};
-
-const commonPlugins = babelConfig => [
-  flow({
-    // needed for sourcemaps to be properly generated
-    pretty: true,
-  }),
-  sourceMaps(),
-  json(),
-  nodeResolve(),
-  babel(babelConfig),
-  commonjs({
-    ignoreGlobal: true,
-  }),
-  replace({
-    __VERSION__: JSON.stringify(pkg.version),
-  }),
-];
+const name = 'napred.forms';
 
 const prodPlugins = [
   replace({
@@ -55,11 +31,19 @@ const umdBase = {
   external: Object.keys(globals),
   output: {
     format: 'umd',
+    exports: 'named',
     globals,
     name,
     sourcemap: true,
   },
-  plugins: commonPlugins(babelESM),
+  onwarn,
+  plugins: [
+    sourceMaps(),
+    nodeResolve(),
+    commonjs({
+      ignoreGlobal: true,
+    }),
+  ],
 };
 
 const umdDevConfig = {
@@ -90,18 +74,17 @@ const cjsConfig = {
   output: {
     file: 'dist/forms.cjs.js',
     format: 'cjs',
+    sourcemap: true,
   },
-  plugins: commonPlugins(babelCJS),
+  onwarn,
+  plugins: [
+    sourceMaps(),
+    nodeResolve(),
+    commonjs({
+      ignore: ['emotion', 'react'],
+      ignoreGlobal: true,
+    }),
+  ],
 };
 
-const esmConfig = {
-  input,
-  external,
-  output: {
-    file: 'dist/forms.esm.js',
-    format: 'esm',
-  },
-  plugins: commonPlugins(babelESM),
-};
-
-export default [umdDevConfig, umdProdConfig, cjsConfig, esmConfig];
+export default [umdDevConfig, umdProdConfig, cjsConfig];
