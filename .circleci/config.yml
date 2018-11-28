@@ -23,7 +23,7 @@ jobs:
           command: yarn lint
       - run:
           name: Typechecking the source code
-          command: yarn flow
+          command: yarn typecheck
       - run:
           name: Testing the source code
           command: yarn test:ci
