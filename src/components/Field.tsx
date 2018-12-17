@@ -1,6 +1,7 @@
 import {
   ComponentType,
   createElement,
+  forwardRef,
   ReactElement,
   ReactNode,
   ReactNodeArray,
@@ -20,13 +21,13 @@ interface IProps {
   [key: string]: any;
 }
 
-export default function Field({
+const Field = forwardRef(({
   as = 'input',
   children = null,
   debounceDelay = 300,
   name,
   ...rest
-}: IProps) {
+}: IProps, ref) => {
   const parentField = useParentField();
   const field = connectToParentField(name, parentField, useField, {
     debounceDelay,
@@ -55,6 +56,11 @@ export default function Field({
     onBlur,
     onChange,
     onFocus,
+    ref,
     value: field.value,
   });
-}
+});
+
+Field.displayName = 'Field';
+
+export default Field;
