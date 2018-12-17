@@ -55,7 +55,7 @@ describe('Form component', () => {
       expect(getByTestId('email-error').innerHTML).toBe('async test failed');
     });
 
-    xit('does not validate on change', async () => {
+    it('does not validate on change', async () => {
       const onSubmit = async () => undefined;
       const { getByTestId } = render(
         <Form onSubmit={onSubmit} validationSchema={validator}>
