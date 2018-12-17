@@ -31,9 +31,7 @@
   "main": "dist/forms.umd.js",
   "jsnext:main": "dist/index.js",
   "module": "dist/index.js",
-  "typings": [
-    "dist/index.d.js"
-  ],
+  "types": "dist/index.d.js",
   "files": [
     "dist",
     "src",
