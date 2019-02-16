@@ -1,8 +1,0 @@
-{
-  "extends": ["tslint:latest", "tslint-react", "tslint-config-prettier"],
-  "rules": {
-    "jsx-boolean-value": "never",
-    "no-implicit-dependencies": false,
-    "no-submodule-imports": false
-  }
-}
