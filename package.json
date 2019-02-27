@@ -86,7 +86,7 @@
     "contributors:add": "all-contributors add",
     "contributors:generate": "all-contributors generate",
     "build": "tsc && rollup -c",
-    "lint": "tslint -p .",
+    "lint": "eslint src/**/*.{ts,tsx}",
     "lint-staged": "lint-staged",
     "prebuild": "rimraf dist",
     "prepublishOnly": "npm run build",

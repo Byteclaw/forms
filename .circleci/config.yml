@@ -20,7 +20,7 @@ jobs:
           command: yarn lint
       - run:
           name: Typechecking the source code
-          command: yarn typecheck
+          command: yarn typecheck:all
       - run:
           name: Testing the source code
           command: yarn test:ci
