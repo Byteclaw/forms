@@ -8,7 +8,7 @@ Simple login form with `email` and `password` fields and validator.
 import '@babel/polyfill';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { Field, FieldError, Form, FormProvider } from '@napred/forms';
+import { Field, FieldError, Form, FormProvider } from '@byteclaw/forms';
 import { object, string } from 'yup';
 
 const validationSchema = object()

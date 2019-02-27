@@ -1,5 +1,5 @@
 {
-  "name": "@napred/forms",
+  "name": "@byteclaw/forms",
   "description": "Easily built forms in React using Hooks API",
   "version": "0.6.0",
   "license": "MIT",
@@ -12,11 +12,11 @@
     "hooks"
   ],
   "bugs": {
-    "url": "https://github.com/napred/forms/issues"
+    "url": "https://github.com/byteclaw/forms/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/napred/forms.git"
+    "url": "git+https://github.com/byteclaw/forms.git"
   },
   "contributors": [
     {

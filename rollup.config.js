@@ -14,7 +14,7 @@ function onwarn(message) {
 
 const input = 'dist/index.js';
 const external = id => !id.startsWith('\0') && !id.startsWith('.') && !id.startsWith('/');
-const name = 'napred.forms';
+const name = 'byteclaw.forms';
 
 const prodPlugins = [
   replace({
