@@ -1,9 +1,9 @@
 # @byteclaw/forms
 
-![CircleCI](https://img.shields.io/circleci/project/github/byteclaw/forms/master.svg?style=flat-square)
+![CircleCI](https://img.shields.io/circleci/project/github/Byteclaw/forms/master.svg?style=flat-square)
 [![All Contributors](https://img.shields.io/badge/all_contributors-2-orange.svg?style=flat-square)](#contributors)
-![Version](https://img.shields.io/npm/v/@napred/forms.svg?style=flat-square)
-![License](https://img.shields.io/npm/l/@napred/forms.svg?style=flat-square)
+![Version](https://img.shields.io/npm/v/@byteclaw/forms.svg?style=flat-square)
+![License](https://img.shields.io/npm/l/@byteclaw/forms.svg?style=flat-square)
 
 Easily create complex forms in [React](https://github.com/facebook/react).
 
@@ -102,6 +102,7 @@ const validator = yup.object().shape({
 <!-- prettier-ignore -->
 | [<img src="https://avatars1.githubusercontent.com/u/174716?v=4" width="100px;"/><br /><sub><b>Michal Kvasničák</b></sub>](https://github.com/michalkvasnicak)<br />[💬](#question-michalkvasnicak "Answering Questions") [💻](https://github.com/byteclaw/@byteclaw/forms/commits?author=michalkvasnicak "Code") [🎨](#design-michalkvasnicak "Design") [📖](https://github.com/byteclaw/@byteclaw/forms/commits?author=michalkvasnicak "Documentation") [💡](#example-michalkvasnicak "Examples") [🤔](#ideas-michalkvasnicak "Ideas, Planning, & Feedback") [👀](#review-michalkvasnicak "Reviewed Pull Requests") [⚠️](https://github.com/byteclaw/@byteclaw/forms/commits?author=michalkvasnicak "Tests") | [<img src="https://avatars1.githubusercontent.com/u/373788?v=4" width="100px;"/><br /><sub><b>Juraj Hríb</b></sub>](https://github.com/jurajhrib)<br />[💬](#question-jurajhrib "Answering Questions") [🐛](https://github.com/byteclaw/@byteclaw/forms/issues?q=author%3Ajurajhrib "Bug reports") [💻](https://github.com/byteclaw/@byteclaw/forms/commits?author=jurajhrib "Code") [📖](https://github.com/byteclaw/@byteclaw/forms/commits?author=jurajhrib "Documentation") [🤔](#ideas-jurajhrib "Ideas, Planning, & Feedback") [👀](#review-jurajhrib "Reviewed Pull Requests") |
 | :---: | :---: |
+
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
 This project follows the [all-contributors](https://github.com/kentcdodds/all-contributors) specification. Contributions of any kind welcome!
