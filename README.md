@@ -19,7 +19,7 @@ yarn add @byteclaw/forms yup
 
 ## Requirements
 
-- `react >= 16.7.0`
+- `react >= 16.8.3`
 
 ## Up and running example
 
