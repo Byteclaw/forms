@@ -1,17 +1,10 @@
-import { SyntheticEvent, useCallback, useState } from 'react';
+import { SyntheticEvent, useCallback, Dispatch } from 'react';
 import * as yup from 'yup';
-import convertValidationErrors from '../utils/convertValidationErrors';
 import { FormContext, FormFieldContext } from './formContext';
 import useObjectField, { Field } from './useObjectField';
+import { formReducer, FormActionEnum, FormAction, FormState } from './formReducer';
 
-type HandleSubmitFn = (e: SyntheticEvent<HTMLFormElement>) => Promise<any>;
-
-export interface IFormState {
-  errors: { [key: string]: string };
-  submitting: boolean;
-  valid: boolean;
-  validating: boolean;
-}
+type HandleSubmitFn = (e: SyntheticEvent<HTMLFormElement>) => Promise<any> | any;
 
 interface IFormAPI {
   handleSubmit: HandleSubmitFn;
@@ -22,114 +15,104 @@ interface IFormComponents {
   FormProvider: (typeof FormContext)['Provider'];
 }
 
-export type Form = Field & IFormState & IFormAPI & IFormComponents;
+export type Form = Field<FormAction> & FormState & IFormAPI & IFormComponents;
 
-type ValidationFn = (values: any) => Promise<any | Error>;
+const defaultValidator = yup.object();
+const defaultInitialValue = {};
 
 export default function useForm(
-  initialValue: undefined | { [key: string]: any },
+  initialValue: undefined | { [key: string]: any } = defaultInitialValue,
   onSubmit: (values: any) => Promise<any>,
-  validator: yup.Schema<any>,
+  validator: yup.Schema<any> = defaultValidator,
   validateOnChange: boolean = false,
 ): Form {
-  const [formState, setFormState] = useState({
-    errors: {},
-    submitting: false,
-    valid: true,
-    validating: false,
-  });
-  const processError = useCallback(
-    (err: yup.ValidationError, extraState?: object) => {
-      const errors = {
-        '': err.message,
-      };
-      const isYupError: boolean = (yup.ValidationError as any).isError(err);
-
-      setFormState(current => ({
-        ...current,
-        errors: isYupError ? convertValidationErrors(err) : errors,
-        valid: !isYupError,
-        validating: false,
-        ...extraState,
-      }));
-    },
-    [setFormState],
-  );
   const validate = useCallback(
-    async value => {
+    (value: any, dispatch: Dispatch<FormAction>): Promise<any> => {
       if (!validator) {
         return value;
       }
 
-      try {
-        setFormState(current => ({ ...current, validating: true }));
+      dispatch({ type: FormActionEnum.VALIDATION_START });
 
-        const values = await validator.validate(value, { abortEarly: false });
+      return validator.validate(value, { abortEarly: false }).then(
+        val => {
+          dispatch({ type: FormActionEnum.VALIDATION_SUCCESS });
 
-        setFormState(current => ({ ...current, errors: {}, valid: true, validating: false }));
+          return val;
+        },
+        e => {
+          dispatch({ type: FormActionEnum.VALIDATION_FAIL, error: e });
 
-        return values;
-      } catch (e) {
-        processError(e);
-
-        throw e;
-      }
+          throw e;
+        },
+      );
     },
-    [setFormState, processError, validator],
+    [validator],
   );
   const onChange = useCallback(
-    async value => {
+    (value: any, dispatch: Dispatch<FormAction>): Promise<any> => {
       if (!validateOnChange) {
         return value;
       }
 
       // catch the error because it is processed
-      return validate(value).catch(() => undefined);
+      return validate(value, dispatch).catch(() => undefined);
     },
     [validate, validateOnChange],
   );
-  const field = useObjectField(undefined, initialValue, formState.errors, {
+  const field = useObjectField<FormState, FormAction>(undefined, initialValue, undefined, {
     debounceDelay: 0,
-    onChange,
+    onChange: onChange as any,
+    initialState: {
+      changing: new Set(),
+      dirty: new Set(),
+      focused: new Set(),
+      initialValue,
+      errors: undefined,
+      submitting: false,
+      touched: new Set(),
+      valid: true,
+      validating: false,
+      value: initialValue,
+    },
+    reducer: formReducer,
   });
   const handleSubmit = useCallback(
-    async (e: SyntheticEvent<HTMLFormElement>) => {
+    (e: SyntheticEvent<HTMLFormElement>): Promise<void> | void => {
       e.preventDefault();
 
-      if (field.changing || formState.submitting || formState.validating) {
+      if (field.changing || field.submitting || field.validating) {
         return;
       }
 
-      try {
-        // do not catch error using .catch but throw it so we can process it
-        // and set form as not submitting
-        const values = await validate(field.value);
+      // validate
+      return validate(field.value, field.dispatch)
+        .then((val: any) => {
+          field.dispatch({ type: FormActionEnum.SUBMIT_START });
 
-        setFormState(current => ({ ...current, submitting: true }));
-
-        await onSubmit(values);
-
-        setFormState(current => ({ ...current, submitting: false }));
-      } catch (err) {
-        processError(err, { submitting: false });
-      }
+          return onSubmit(val);
+        })
+        .then(() => {
+          field.dispatch({ type: FormActionEnum.SUBMIT_SUCCESS });
+        })
+        .catch((err: any) => field.dispatch({ type: FormActionEnum.SUBMIT_FAIL, error: err }));
     },
     [
       onSubmit,
-      setFormState,
+      field.dispatch,
       validate,
       field.changing,
       field.value,
-      formState.submitting,
-      formState.validating,
+      field.submitting,
+      field.validating,
     ],
   );
 
   return {
     ...field,
-    ...formState,
     FieldProvider: field.Provider,
     FormProvider: FormContext.Provider,
     handleSubmit,
+    valid: field.errors == null,
   };
 }

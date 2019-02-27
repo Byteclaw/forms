@@ -1,7 +1,9 @@
-// tslint:disable:jsx-no-lambda
-import React, { Fragment, SyntheticEvent } from 'react';
-import { fireEvent, render, wait } from 'react-testing-library';
+// @ts-ignore
+import React, { ConcurrentMode, Fragment, SyntheticEvent, unstable_ConcurrentMode } from 'react';
+import { act, fireEvent, render } from 'react-testing-library';
 import useObjectField from '../useObjectField';
+
+const Concurrent = unstable_ConcurrentMode || ConcurrentMode;
 
 function Input({
   currentValue,
@@ -55,75 +57,121 @@ function Input({
   );
 }
 
-describe('useObjectField hook', () => {
-  it('works corretly', async () => {
-    const onChangeMock = jest.fn();
-    const { getByTestId, rerender } = render(<Input enableReinitialize={true} onChange={onChangeMock} />);
+describe.each([['Sync mode', 'div'], ['Concurrent mode', Concurrent]])(
+  'useObjectField hook (%s)',
+  (_, Container) => {
+    it('works corretly', () => {
+      const onChangeMock = jest.fn();
+      const { getByTestId, rerender } = render(
+        <Container>
+          <Input enableReinitialize onChange={onChangeMock} />
+        </Container>,
+      );
 
-    expect(getByTestId('dirty').innerHTML).toBe('false');
-    expect(getByTestId('changing').innerHTML).toBe('false');
-    expect(getByTestId('initialValue').innerHTML).toBe('');
-    expect(getByTestId('focused').innerHTML).toBe('false');
-    expect(getByTestId('touched').innerHTML).toBe('false');
-
-    // now touch it
-    fireEvent.focus(getByTestId('input'));
-
-    expect(getByTestId('focused').innerHTML).toBe('true');
-    expect(getByTestId('touched').innerHTML).toBe('true');
-
-    fireEvent.blur(getByTestId('input'));
-
-    expect(getByTestId('focused').innerHTML).toBe('false');
-    expect(getByTestId('touched').innerHTML).toBe('true');
-
-    // change the value
-    fireEvent.change(getByTestId('input'), { target: { value: '{"a":1}' } });
-    fireEvent.change(getByTestId('input'), { target: { value: '{"a":1,"b":2}' } });
-    expect((getByTestId('input') as HTMLInputElement).value).toBe('{"a":1,"b":2}');
-
-    expect(getByTestId('changing').innerHTML).toBe('true');
-    expect(getByTestId('dirty').innerHTML).toBe('true');
-
-    await wait(() => {
+      expect(getByTestId('dirty').innerHTML).toBe('false');
       expect(getByTestId('changing').innerHTML).toBe('false');
-    });
+      expect(getByTestId('initialValue').innerHTML).toBe('{}');
+      expect(getByTestId('focused').innerHTML).toBe('false');
+      expect(getByTestId('touched').innerHTML).toBe('false');
 
-    expect(onChangeMock).toHaveBeenCalledTimes(1);
-    expect(onChangeMock).toHaveBeenCalledWith({ a: 1, b: 2 });
+      // now touch it
+      fireEvent.focus(getByTestId('input'));
 
-    // now change initial value
-    rerender(
-      <Input enableReinitialize={true} initialValue={{ a: 2, b: 1, c: 3 }} onChange={onChangeMock} />,
-    );
+      // flush changes
+      act(() => jest.runTimersToTime(0));
 
-    expect(onChangeMock).toHaveBeenCalledTimes(2);
-    expect(onChangeMock).toHaveBeenCalledWith({ a: 2, b: 1, c: 3 });
+      expect(getByTestId('focused').innerHTML).toBe('true');
+      expect(getByTestId('touched').innerHTML).toBe('true');
 
-    expect(getByTestId('dirty').innerHTML).toBe('false');
-    expect((getByTestId('input') as HTMLInputElement).value).toBe('{"a":2,"b":1,"c":3}');
-    expect(getByTestId('initialValue').innerHTML).toBe('{"a":2,"b":1,"c":3}');
+      fireEvent.blur(getByTestId('input'));
 
-    // set field
-    fireEvent.click(getByTestId('setField'), { target: { field: 'd', value: '4' } });
-    expect(getByTestId('changing').innerHTML).toBe('true');
-    expect((getByTestId('input') as HTMLInputElement).value).toBe('{"a":2,"b":1,"c":3,"d":"4"}');
+      // flush changes
+      act(() => jest.runTimersToTime(0));
 
-    await wait(() => {
+      expect(getByTestId('focused').innerHTML).toBe('false');
+      expect(getByTestId('touched').innerHTML).toBe('true');
+
+      // change the value
+      fireEvent.change(getByTestId('input'), { target: { value: '{"a":1}' } });
+      fireEvent.change(getByTestId('input'), { target: { value: '{"a":1,"b":2}' } });
+
+      // flush changes
+      act(() => jest.runTimersToTime(0));
+
+      expect((getByTestId('input') as HTMLInputElement).value).toBe('{"a":1,"b":2}');
+      expect(getByTestId('changing').innerHTML).toBe('true');
+      expect(getByTestId('dirty').innerHTML).toBe('true');
+
+      // resolve debounce
+      act(() => jest.runAllTimers());
+
+      // flush changes
+      act(() => jest.runTimersToTime(0));
+
       expect(getByTestId('changing').innerHTML).toBe('false');
-      expect(onChangeMock).toHaveBeenCalledTimes(3);
-      expect(onChangeMock).toHaveBeenCalledWith({ a: 2, b: 1, c: 3, d: '4' });
-    });
+      expect(onChangeMock).toHaveBeenLastCalledWith({ a: 1, b: 2 }, expect.any(Function));
 
-    // set field
-    fireEvent.click(getByTestId('setField'), { target: { field: 'a', value: '4' } });
-    expect(getByTestId('changing').innerHTML).toBe('true');
-    expect((getByTestId('input') as HTMLInputElement).value).toBe('{"a":"4","b":1,"c":3,"d":"4"}');
+      // now change initial value
+      rerender(
+        <Container>
+          <Input enableReinitialize initialValue={{ a: 2, b: 1, c: 3 }} onChange={onChangeMock} />
+        </Container>,
+      );
 
-    await wait(() => {
+      expect(onChangeMock).toHaveBeenLastCalledWith({ a: 2, b: 1, c: 3 }, expect.any(Function));
+
+      // flush changes
+      act(() => jest.runAllTimers());
+      // flush changes
+      act(() => jest.runTimersToTime(0));
+
+      expect(getByTestId('dirty').innerHTML).toBe('false');
+      expect((getByTestId('input') as HTMLInputElement).value).toBe('{"a":2,"b":1,"c":3}');
+      expect(getByTestId('initialValue').innerHTML).toBe('{"a":2,"b":1,"c":3}');
+
+      // set field
+      fireEvent.click(getByTestId('setField'), { target: { field: 'd', value: '4' } });
+
+      // flush changes
+      act(() => jest.runTimersToTime(0));
+
+      expect(getByTestId('changing').innerHTML).toBe('true');
+      expect((getByTestId('input') as HTMLInputElement).value).toBe('{"a":2,"b":1,"c":3,"d":"4"}');
+
+      // resolve debounce
+      act(() => jest.runAllTimers());
+
+      // flush changes
+      act(() => jest.runTimersToTime(0));
+
       expect(getByTestId('changing').innerHTML).toBe('false');
-      expect(onChangeMock).toHaveBeenCalledTimes(4);
-      expect(onChangeMock).toHaveBeenCalledWith({ a: '4', b: 1, c: 3, d: '4' });
+      expect(onChangeMock).toHaveBeenLastCalledWith(
+        { a: 2, b: 1, c: 3, d: '4' },
+        expect.any(Function),
+      );
+
+      // set field
+      fireEvent.click(getByTestId('setField'), { target: { field: 'a', value: '4' } });
+
+      // flush changes
+      act(() => jest.runTimersToTime(0));
+
+      expect(getByTestId('changing').innerHTML).toBe('true');
+      expect((getByTestId('input') as HTMLInputElement).value).toBe(
+        '{"a":"4","b":1,"c":3,"d":"4"}',
+      );
+
+      // resolve debounce
+      act(() => jest.runAllTimers());
+
+      // flush changes
+      act(() => jest.runTimersToTime(0));
+
+      expect(getByTestId('changing').innerHTML).toBe('false');
+      expect(onChangeMock).toHaveBeenLastCalledWith(
+        { a: '4', b: 1, c: 3, d: '4' },
+        expect.any(Function),
+      );
     });
-  });
-});
+  },
+);

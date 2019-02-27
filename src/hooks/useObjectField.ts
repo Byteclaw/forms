@@ -1,42 +1,55 @@
 import { useCallback } from 'react';
 import { FormFieldContext } from './formContext';
-import useField, { IField as IScalarField, IFieldSettings, IFieldState } from './useField';
+import useField, { IField as IScalarField, IFieldSettings } from './useField';
+import {
+  objectFieldReducer,
+  ObjectFieldActionEnum,
+  ObjectFieldAction,
+  SetFieldAction,
+} from './objectFieldReducer';
+import { FieldState } from './fieldReducer';
 
 type GetErrorFn = (field: number | string) => void | string;
 type GetFieldFn = (field: number | string) => any;
 type SetFieldFn = (field: number | string, value: any) => void;
 
-export type Field = IScalarField<undefined | { [key: string]: string } | string> & {
+export type Field<TActions> = IScalarField<TActions> & {
   kind: 'OBJECT';
   getError: GetErrorFn;
   getField: GetFieldFn;
   getInitialField: GetFieldFn;
   setField: SetFieldFn;
-};
+} & IFieldComponents;
 
 interface IFieldComponents {
   Provider: typeof FormFieldContext['Provider'];
 }
 
-export default function useObjectField(
+const defaultInitialValue = {};
+
+export default function useObjectField<
+  TFieldState extends FieldState<{ [key: string]: any }> = FieldState<{ [key: string]: any }>,
+  TFieldActions = ObjectFieldAction
+>(
   currentValue?: { [key: string]: any },
-  initialValue?: { [key: string]: any },
-  errors?: { [key: string]: string } | string,
-  settings?: IFieldSettings,
-): Field & IFieldComponents {
-  const field = useField(currentValue, initialValue, errors, {
+  initialValue: { [key: string]: any } = defaultInitialValue,
+  errors?: undefined | { [key: string]: string } | string,
+  settings?: IFieldSettings<TFieldState, TFieldActions>,
+): TFieldState & Field<TFieldActions> {
+  const field = useField<TFieldState, TFieldActions>(currentValue, initialValue, errors, {
     enableReinitialize: false,
+    reducer: objectFieldReducer as any,
     ...settings,
   });
   const getError = useCallback(
     fieldName => {
-      if (field.error == null || typeof field.error === 'string') {
+      if (field.errors == null || typeof field.errors === 'string') {
         return undefined;
       }
 
-      return field.error[fieldName];
+      return field.errors[fieldName];
     },
-    [field.error],
+    [field.errors],
   );
   const getField = useCallback(fieldName => (field.value ? field.value[fieldName] : undefined), [
     field.value,
@@ -46,13 +59,20 @@ export default function useObjectField(
     [field.initialValue],
   );
   const setField = useCallback(
-    (fieldName, newValue) =>
-      field.setValue(({ value }: IFieldState) => ({ ...value, [fieldName]: newValue })),
-    [field.setValue],
+    (fieldName: string, value: any) => {
+      field.setChanging(true);
+      field.dispatch(({
+        type: ObjectFieldActionEnum.SET_FIELD,
+        field: fieldName,
+        name: '',
+        value,
+      } as SetFieldAction) as any);
+    },
+    [field.setChanging, field.dispatch],
   );
 
   return {
-    ...field,
+    ...(field as any),
     Provider: FormFieldContext.Provider,
     getError,
     getField,

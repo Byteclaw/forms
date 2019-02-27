@@ -11,7 +11,7 @@ import connectToParentField from '../hooks/connectToParentField';
 import useField, { IField as FieldAPI } from '../hooks/useField';
 import useParentField from '../hooks/useParentField';
 
-type FieldRenderFn = (field: FieldAPI<void | string>) => ReactNode;
+type FieldRenderFn = (field: FieldAPI) => ReactNode;
 
 interface IProps {
   as?: string | ComponentType<any>;
@@ -59,7 +59,7 @@ const Field = forwardRef(
       onChange,
       onFocus,
       ref,
-      value: field.value,
+      value: field.value || '',
     });
   },
 );

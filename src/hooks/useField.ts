@@ -1,6 +1,7 @@
 import debounce from 'lodash.debounce';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useReducer, useRef, Dispatch, Reducer } from 'react';
 import useConnectedForm from './useConnectedForm';
+import { fieldReducer, FieldActionType, FieldAction, FieldState } from './fieldReducer';
 
 export interface IFieldState {
   dirty: Set<string | number>;
@@ -14,7 +15,7 @@ export interface IFieldState {
 type IsDirtyFn = (name?: string | number) => boolean;
 type IsFocusedFn = (name?: string | number) => boolean;
 type IsTouchedFn = (name?: string | number) => boolean;
-type OnChangeFn = (value: any) => any;
+type OnChangeFn<TDispatch = Dispatch<any>> = (value: any, dispatch: TDispatch) => any;
 type OnChangingChangeFn = (changing: boolean) => any;
 type OnFocusChangeFn = (focused: boolean) => any;
 type OnDirtyChangeFn = (dirty: boolean) => any;
@@ -23,10 +24,11 @@ type SetDirtyFn = (dirty: boolean, childName?: string | number) => void;
 type SetFocusFn = (focused: boolean, childName?: string | number) => void;
 type SetValueFn = (value: ((currentState: IFieldState) => any) | any) => void;
 
-export interface IField<TError> {
+export interface IField<TActions = FieldAction, TValue = any> {
   changing: boolean;
   dirty: boolean;
-  error: TError;
+  dispatch: Dispatch<TActions>;
+  errors: { [key: string]: string } | string | undefined;
   focused: boolean;
   initialValue: any;
   isDirty: IsDirtyFn;
@@ -37,101 +39,96 @@ export interface IField<TError> {
   setFocused: SetFocusFn;
   setValue: SetValueFn;
   touched: boolean;
-  value: any;
+  value: TValue;
   valid: boolean;
 }
 
-export interface IFieldSettings {
+export interface IFieldSettings<
+  TFieldState extends FieldState = FieldState,
+  TFieldActions = FieldAction
+> {
   debounceDelay?: number;
   enableReinitialize?: boolean;
-  onChange?: OnChangeFn;
+  initialState?: TFieldState;
+  onChange?: OnChangeFn<Dispatch<TFieldActions>>;
   onChangingChange?: OnChangingChangeFn;
   onDirtyChange?: OnDirtyChangeFn;
   onFocusChange?: OnFocusChangeFn;
+  reducer?: Reducer<TFieldState, TFieldActions>;
 }
 
 const noop = () => undefined;
 
-function addToSet<T>(set: Set<T>, value: T): Set<T> {
-  if (set.has(value)) {
-    return set;
-  }
-
-  return new Set([...set, value]);
-}
-
-function removeFromSet<T>(set: Set<T>, value: T): Set<T> {
-  if (set.delete(value)) {
-    return new Set(set);
-  }
-
-  return set;
-}
-
-export default function useField<TError>(
+export default function useField<
+  TFieldState extends FieldState = FieldState,
+  TFieldActions = FieldAction
+>(
   currentValue: any,
   initialValue: any,
-  error: TError,
+  error: string | { [key: string]: string } | undefined,
   {
     debounceDelay = 300,
     enableReinitialize = true,
+    initialState,
     onChange = noop,
     onChangingChange = noop,
     onDirtyChange = noop,
     onFocusChange = noop,
-  }: IFieldSettings = {},
-): IField<TError> {
+    reducer,
+  }: IFieldSettings<TFieldState, TFieldActions> = {},
+): IField<TFieldActions> {
   const form = useConnectedForm();
-  const [state, setState] = useState({
-    changing: new Set(),
-    dirty: new Set(),
-    focused: new Set(),
-    initialValue,
-    touched: new Set(),
-    value: currentValue || initialValue,
+  const stateTracker = useRef({
+    lastValue: initialState ? initialState.initialValue : currentValue || initialValue,
+    lastInitialValue: initialState ? initialState.initialValue : initialValue,
+    changing: false,
+    dirty: false,
+    focused: false,
   });
+  const [state, dispatch] = useReducer(
+    reducer || fieldReducer,
+    initialState || {
+      changing: new Set<string>(),
+      dirty: new Set<string>(),
+      focused: new Set<string>(),
+      initialValue,
+      touched: new Set<string>(),
+      value: currentValue || initialValue,
+    },
+  );
   const isDirty = useCallback((name = '') => state.dirty.has(name), [state.dirty]);
   const isFocused = useCallback((name = '') => state.focused.has(name), [state.focused]);
   const isTouched = useCallback((name = '') => state.touched.has(name), [state.touched]);
   const setDirty = useCallback(
-    (dirtyState, name = '') =>
-      setState(currentState => ({
-        ...currentState,
-        dirty: dirtyState
-          ? addToSet(currentState.dirty, name)
-          : removeFromSet(currentState.dirty, name),
-      })),
-    [true],
+    (isDirty: boolean, name: string = '') =>
+      dispatch({ type: FieldActionType.SET_DIRTY, isDirty, name }),
+    [dispatch],
   );
   const setFocused = useCallback(
-    (focusState, name = '') =>
-      setState(currentState => ({
-        ...currentState,
-        focused: focusState
-          ? addToSet(currentState.focused, name)
-          : removeFromSet(currentState.focused, name),
-        touched: addToSet(currentState.touched, name),
-      })),
-    [true],
+    (isFocused: boolean, name: string = '') =>
+      dispatch({
+        type: FieldActionType.SET_FOCUS,
+        isFocused,
+        name,
+      }),
+    [dispatch],
   );
   const setChanging = useCallback(
-    (changingState, name = '') =>
-      setState(currentState => ({
-        ...currentState,
-        changing: changingState
-          ? addToSet(currentState.changing, name)
-          : removeFromSet(currentState.changing, name),
-      })),
-    [true],
+    (isChanging: boolean, name: string = '') =>
+      dispatch({
+        type: FieldActionType.SET_CHANGING,
+        isChanging,
+        name,
+      }),
+    [dispatch],
   );
-  const notifyChange = useMemo(
-    () =>
-      debounce(value => {
-        onChange(value);
-        setChanging(false);
-      }, debounceDelay),
-    [debounceDelay, onChange, setChanging],
-  );
+  const notifyChange = useMemo(() => {
+    return debounce(value => {
+      onChange(value, dispatch);
+      setChanging(false);
+    }, debounceDelay);
+  }, [debounceDelay, dispatch, onChange, setChanging]);
+
   const setValue = useCallback(
     newValue => {
       // ignore change if form is submitting/validating
@@ -139,90 +136,73 @@ export default function useField<TError>(
         return;
       }
 
-      // set value marks field as changing and sets it as not changing in debounced callback
-      setState(currentState => {
-        const value = typeof newValue === 'function' ? newValue(currentState) : newValue;
-
-        // notify parent about the change
-        notifyChange(value);
-
-        return {
-          ...currentState,
-          changing: addToSet(currentState.changing, ''),
-          dirty:
-            value !== currentState.initialValue
-              ? addToSet(currentState.dirty, '')
-              : removeFromSet(currentState.dirty, ''),
-          value,
-        };
-      });
+      setChanging(true);
+      dispatch({ type: FieldActionType.SET_VALUE, name: '', value: newValue });
+      notifyChange(newValue);
     },
-    [form.submitting, form.validating],
+    [form, dispatch, setChanging, notifyChange],
   );
+  const changing = state.changing.size > 0;
+  const dirty = state.dirty.size > 0;
+  const focused = state.focused.size > 0;
+  const touched = state.touched.size > 0;
 
-  // change initial value if it has changed
-  // reinitialize value too but only if value has changed
-  if (initialValue !== state.initialValue) {
-    setState(currentState => {
-      const newState = {
-        ...currentState,
-        dirty: enableReinitialize
-          ? removeFromSet(currentState.dirty, '')
-          : initialValue !== currentState.value
-            ? addToSet(currentState.dirty, '')
-            : removeFromSet(currentState.dirty, ''),
-        initialValue,
-        value: enableReinitialize ? initialValue : currentState.value,
-      };
-
-      if (enableReinitialize) {
-        onChange(newState.value);
-      }
-
-      return newState;
-    });
+  if (changing !== stateTracker.current.changing) {
+    stateTracker.current.changing = changing;
+    onChangingChange(changing);
   }
 
-  // notify about changing on change
-  const changing = useMemo(
-    () => {
-      const nonEmpty = state.changing.size > 0;
+  if (focused !== stateTracker.current.focused) {
+    stateTracker.current.focused = focused;
+    onFocusChange(focused);
+  }
 
-      onChangingChange(nonEmpty);
+  if (dirty !== stateTracker.current.dirty) {
+    stateTracker.current.dirty = dirty;
+    onDirtyChange(dirty);
+  }
 
-      return nonEmpty;
-    },
-    [state.changing],
-  );
-  // notify about dirty
-  const dirty = useMemo(
-    () => {
-      const nonEmpty = state.dirty.size > 0;
+  if (state.value !== stateTracker.current.lastValue) {
+    stateTracker.current.lastValue = state.value;
 
-      onDirtyChange(nonEmpty);
+    notifyChange(state.value);
+  }
 
-      return nonEmpty;
-    },
-    [state.dirty],
-  );
-  const focused = useMemo(
-    () => {
-      const nonEmpty = state.focused.size > 0;
+  // change initial value if it has changed
+  if (
+    initialValue !== stateTracker.current.lastInitialValue &&
+    initialValue !== state.initialValue
+  ) {
+    stateTracker.current.lastInitialValue = initialValue;
 
-      onFocusChange(nonEmpty);
+    dispatch({ type: FieldActionType.SET_INITIAL_VALUE, name: '', value: initialValue });
 
-      return nonEmpty;
-    },
-    [state.focused],
-  );
-  const touched = useMemo(() => state.touched.size > 0, [state.touched]);
+    if (enableReinitialize) {
+      // during reinitialize we need to cancel previous debounced changes
+      // force as not changing
+      // rewrite last value so we are not firing debounced change again
+      // and fire onChange imperatively
+      stateTracker.current.lastValue = initialValue;
+
+      // cancel previous debounced on change
+      notifyChange.cancel();
+
+      // force as not changing
+      setChanging(false);
+
+      dispatch({ type: FieldActionType.SET_VALUE, name: '', value: initialValue });
+      onChange(initialValue, dispatch);
+    }
+  }
 
   return {
+    // form sets errors in it's state, so we need to allow local error to be overriden
+    errors: error,
+    ...state,
     changing,
     dirty,
-    error,
+    dispatch,
     focused,
-    initialValue: state.initialValue,
     isDirty,
     isFocused,
     isTouched,
@@ -232,6 +212,5 @@ export default function useField<TError>(
     setValue,
     touched,
     valid: error == null,
-    value: state.value,
   };
 }

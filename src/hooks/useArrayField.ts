@@ -1,6 +1,16 @@
 import { useCallback } from 'react';
 import { FormFieldContext } from './formContext';
-import useField, { IField as IScalarField, IFieldSettings, IFieldState } from './useField';
+import useField, { IField as IScalarField, IFieldSettings } from './useField';
+import {
+  ArrayFieldActionEnum,
+  arrayFieldReducer,
+  ArrayFieldAction,
+  AddValueAction,
+  RemoveValueAction,
+  RemoveLastValueAction,
+  SetValueAtIndexAction,
+} from './arrayFieldReducer';
+import { FieldState } from './fieldReducer';
 
 type AddItemFn = (value: any) => void;
 type GetErrorFn = (field: string | number) => void | string;
@@ -9,7 +19,7 @@ type RemoveLastItemFn = () => void;
 type RemoveItemFn = (index: number) => void;
 type SetItemFn = (index: number | string, value: any) => void;
 
-export type Field = IScalarField<undefined | { [key: string]: string } | string> & {
+export type Field<TActions> = IScalarField<TActions> & {
   addItem: AddItemFn;
   getError: GetErrorFn;
   getInitialItem: GetItemFn;
@@ -18,85 +28,99 @@ export type Field = IScalarField<undefined | { [key: string]: string } | string>
   removeItem: RemoveItemFn;
   removeLastItem: RemoveLastItemFn;
   setItem: SetItemFn;
-};
+} & IFieldComponents;
 
 interface IFieldComponents {
   Provider: typeof FormFieldContext['Provider'];
 }
 
-export default function useArrayField(
+const defaultInitialState: any[] = [];
+
+export default function useArrayField<
+  TFieldState extends FieldState<any[]> = FieldState<any[]>,
+  TFieldActions extends ArrayFieldAction = ArrayFieldAction
+>(
   currentValue?: any[],
-  initialValue?: any[],
-  errors?: { [key: string]: string } | string,
-  settings?: IFieldSettings,
-): Field & IFieldComponents {
-  const field = useField(currentValue, initialValue, errors, {
+  initialValue: any[] = defaultInitialState,
+  errors?: string | { [key: string]: string } | undefined,
+  settings?: IFieldSettings<TFieldState, TFieldActions>,
+): Field<TFieldActions> {
+  const field = useField<TFieldState, TFieldActions>(currentValue, initialValue, errors, {
     enableReinitialize: false,
+    reducer: arrayFieldReducer as any,
     ...settings,
   });
   const getError = useCallback(
     fieldName => {
-      if (field.error == null || typeof field.error === 'string') {
+      if (field.errors == null || typeof field.errors === 'string') {
         return undefined;
       }
 
-      return field.error[fieldName];
+      return field.errors[fieldName];
     },
-    [field.error],
+    [field.errors],
   );
   const getItem = useCallback(fieldName => (field.value ? field.value[fieldName] : undefined), [
-    field.value,
+    field,
   ]);
   const getInitialItem = useCallback(
     fieldName => (field.initialValue ? field.initialValue[fieldName] : undefined),
-    [field.initialValue],
+    [field],
   );
   const addItem = useCallback(
-    (newValue: any) =>
-      field.setValue(({ value }: IFieldState) => {
-        if (value == null) {
-          return [newValue];
-        }
-
-        return [...value, newValue];
-      }),
-    [field.setValue],
+    (value: any) => {
+      field.setChanging(true);
+      field.dispatch(({
+        type: ArrayFieldActionEnum.ADD_VALUE,
+        name: '',
+        value,
+      } as AddValueAction) as any);
+    },
+    [field.dispatch, field.setChanging],
   );
   const removeItem = useCallback(
-    (index: number) =>
-      field.setValue(({ value }: IFieldState) => [
-        ...value.slice(0, index),
-        ...value.slice(index + 1),
-      ]),
-    [field.setValue],
-  );
-  const removeLastItem = useCallback(
-    () => {
-      field.setValue(({ value }: IFieldState) => value.slice(0, -1));
+    (index: number) => {
+      field.setChanging(true);
+      field.dispatch(({
+        type: ArrayFieldActionEnum.REMOVE_VALUE,
+        name: '',
+        index,
+      } as RemoveValueAction) as any);
     },
-    [field.setValue],
+    [field.dispatch, field.setChanging],
   );
-  const setItem = useCallback(
-    (fieldName, newValue) =>
-      field.setValue(({ value }: IFieldState) => {
-        const clonedValue = (value || []).slice();
-        clonedValue[fieldName] = newValue;
 
-        return clonedValue;
-      }),
-    [field.setValue],
+  const removeLastItem = useCallback(() => {
+    field.setChanging(true);
+    field.dispatch(({
+      type: ArrayFieldActionEnum.REMOVE_LAST_VALUE,
+      name: '',
+    } as RemoveLastValueAction) as any);
+  }, [field.dispatch, field.setChanging]);
+
+  const setItem = useCallback(
+    (index: number | string, value: any) => {
+      field.setChanging(true);
+      field.dispatch(({
+        type: ArrayFieldActionEnum.SET_VALUE_AT_INDEX,
+        name: '',
+        index: Number(index),
+        value,
+      } as SetValueAtIndexAction) as any);
+    },
+    [field.dispatch, field.setChanging],
   );
 
   return {
     ...field,
-    Provider: FormFieldContext.Provider,
     addItem,
+    removeItem,
+    removeLastItem,
+    setItem,
+    Provider: FormFieldContext.Provider,
     getError,
     getInitialItem,
     getItem,
     kind: 'ARRAY',
-    removeItem,
-    removeLastItem,
-    setItem,
   };
 }

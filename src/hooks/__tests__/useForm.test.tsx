@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render, wait } from 'react-testing-library';
+import { act, fireEvent, render } from 'react-testing-library';
 import * as yup from 'yup';
 import Field from '../../components/Field';
 import FieldError from '../../components/FieldError';
@@ -47,10 +47,8 @@ const validationSchema = yup.object().shape({
 });
 
 describe('useForm hook', () => {
-  it('works correctly', async () => {
-    const onSubmitMock = jest
-      .fn()
-      .mockImplementationOnce(() => new Promise(r => setTimeout(r, 10)));
+  it('works correctly', () => {
+    const onSubmitMock = jest.fn().mockImplementationOnce(() => new Promise(r => r()));
     const { getByTestId } = render(<Form onSubmit={onSubmitMock} validator={validationSchema} />);
 
     expect(getByTestId('changing').innerHTML).toBe('false');
@@ -62,70 +60,64 @@ describe('useForm hook', () => {
 
     expect(getByTestId('changing').innerHTML).toBe('true');
 
-    // wait for email to be not changing but password should be changing
-    // because it has longer debounce
-    await new Promise(r => setTimeout(r, 4));
+    // resolve debounce on email input and password input
+    act(() => jest.runAllTimers());
+    // resolve debounce on form
+    act(() => jest.runOnlyPendingTimers());
 
-    expect(getByTestId('changing').innerHTML).toBe('true');
-
-    await wait(() => {
-      expect(getByTestId('changing').innerHTML).toBe('false');
-    });
-
-    // wait for input to notify about change
-    await new Promise(r => setTimeout(r, 5));
+    expect(getByTestId('changing').innerHTML).toBe('false');
 
     // now submit the form
     fireEvent.submit(getByTestId('form'));
 
-    await wait(() => {
-      expect(getByTestId('validating').innerHTML).toBe('false');
-    });
+    expect(getByTestId('validating').innerHTML).toBe('true');
+
+    act(() => jest.runAllImmediates());
 
     expect(onSubmitMock).not.toHaveBeenCalled();
+
+    expect(getByTestId('validating').innerHTML).toBe('false');
 
     // now change the value, so form is valid
     fireEvent.change(getByTestId('email-input'), { target: { value: 'a@a.com' } });
 
-    await wait(() => {
-      expect(getByTestId('changing').innerHTML).toBe('false');
-    });
+    // resolve debounce on email input
+    act(() => jest.runOnlyPendingTimers());
+    // resolve debounce on form
+    act(() => jest.runOnlyPendingTimers());
+
+    expect(getByTestId('changing').innerHTML).toBe('false');
 
     fireEvent.submit(getByTestId('form'));
 
-    await wait(() => {
-      expect(getByTestId('validating').innerHTML).toBe('false');
-      expect(getByTestId('submitting').innerHTML).toBe('true');
-    });
+    expect(getByTestId('validating').innerHTML).toBe('true');
 
-    await wait(() => {
-      expect(getByTestId('submitting').innerHTML).toBe('false');
-    });
+    // this'll finish the validation but also it'll finish submission too
+    act(() => jest.runAllImmediates());
+
+    expect(getByTestId('validating').innerHTML).toBe('false');
+    expect(getByTestId('submitting').innerHTML).toBe('false');
 
     expect(onSubmitMock).toHaveBeenCalledTimes(1);
     expect(onSubmitMock).toHaveBeenCalledWith({ email: 'a@a.com', password: 'a' });
 
     // if onSubmit throws, register it as global error
-    onSubmitMock.mockImplementationOnce(async () => {
-      throw new Error('Submit error');
-    });
+    onSubmitMock.mockImplementationOnce(() => Promise.reject(new Error('Submit error')));
 
     fireEvent.submit(getByTestId('form'));
 
-    await wait(() => {
-      expect(getByTestId('validating').innerHTML).toBe('false');
-      expect(getByTestId('submitting').innerHTML).toBe('false');
-    });
+    expect(getByTestId('validating').innerHTML).toBe('true');
 
-    await wait(() => {
-      expect(getByTestId('submitting').innerHTML).toBe('false');
-    });
+    // this'll finish the validation but also it'll finish submission too
+    act(() => jest.runAllImmediates());
 
+    expect(getByTestId('validating').innerHTML).toBe('false');
+    expect(getByTestId('submitting').innerHTML).toBe('false');
     expect(getByTestId('form-error').innerHTML).toBe('Submit error');
   });
 
-  it('works with initial values', async () => {
-    const onSubmitMock = jest.fn().mockImplementation(() => new Promise(r => setTimeout(r, 10)));
+  it('works with initial values', () => {
+    const onSubmitMock = jest.fn().mockImplementation(() => new Promise(r => r()));
     const initialValues = {
       email: 'a@a.com',
       password: 'test',
@@ -142,22 +134,41 @@ describe('useForm hook', () => {
     fireEvent.change(getByTestId('password-input'), { target: { value: 'new-password' } });
     fireEvent.change(getByTestId('color-input'), { target: { value: 'new-color' } });
 
-    await wait(() => expect(getByTestId('changing').innerHTML).toBe('true'));
-    await wait(() => expect(getByTestId('changing').innerHTML).toBe('false'));
+    expect(getByTestId('changing').innerHTML).toBe('true');
+
+    // resolve debounces on all inputs
+    act(() => jest.runAllTimers());
+    // resolve debounces on all parent inputs (object field)
+    act(() => jest.runOnlyPendingTimers());
+    // resolve debounce on form
+    act(() => jest.runOnlyPendingTimers());
+
+    expect(getByTestId('changing').innerHTML).toBe('false');
 
     // now erase email
     fireEvent.change(getByTestId('email-input'), { target: { value: '' } });
 
-    await wait(() => expect(getByTestId('changing').innerHTML).toBe('true'));
-    await wait(() => expect(getByTestId('changing').innerHTML).toBe('false'));
+    expect(getByTestId('changing').innerHTML).toBe('true');
 
+    // resolve debounce on email input
+    act(() => jest.runOnlyPendingTimers());
+    // resolve debounce on form
+    act(() => jest.runOnlyPendingTimers());
+
+    expect(getByTestId('changing').innerHTML).toBe('false');
     expect((getByTestId('email-input') as HTMLInputElement).value).toBe('');
 
     // now change the value of email
     fireEvent.change(getByTestId('email-input'), { target: { value: 'b@b.com' } });
 
-    await wait(() => expect(getByTestId('changing').innerHTML).toBe('true'));
-    await wait(() => expect(getByTestId('changing').innerHTML).toBe('false'));
+    expect(getByTestId('changing').innerHTML).toBe('true');
+
+    // resolve debounce on email input
+    act(() => jest.runOnlyPendingTimers());
+    // resolve debounce on form
+    act(() => jest.runOnlyPendingTimers());
+
+    expect(getByTestId('changing').innerHTML).toBe('false');
 
     // now check the value of input
     expect((getByTestId('email-input') as HTMLInputElement).value).toBe('b@b.com');
@@ -166,8 +177,10 @@ describe('useForm hook', () => {
 
     fireEvent.submit(getByTestId('form'));
 
-    await wait(() => expect(getByTestId('submitting').innerHTML).toBe('true'));
-    await wait(() => expect(getByTestId('submitting').innerHTML).toBe('false'));
+    // resolve validation and submission
+    act(() => jest.runAllImmediates());
+
+    expect(getByTestId('submitting').innerHTML).toBe('false');
 
     expect(onSubmitMock).toHaveBeenCalledTimes(1);
     expect(onSubmitMock).toHaveBeenCalledWith({
@@ -191,13 +204,24 @@ describe('useForm hook', () => {
     expect((getByTestId('password-input') as HTMLInputElement).value).toBe('new-password');
     expect((getByTestId('color-input') as HTMLInputElement).value).toBe('test-color');
 
-    await wait(() => expect(getByTestId('changing').innerHTML).toBe('false'));
+    expect(getByTestId('changing').innerHTML).toBe('true');
+
+    // resolve debounce on all inputs
+    act(() => jest.runAllTimers());
+    // resolve debounce on parent inputs
+    act(() => jest.runOnlyPendingTimers());
+    // resolve debounce on form
+    act(() => jest.runOnlyPendingTimers());
+
+    expect(getByTestId('changing').innerHTML).toBe('false');
 
     // submit form
     fireEvent.submit(getByTestId('form'));
 
-    await wait(() => expect(getByTestId('submitting').innerHTML).toBe('true'));
-    await wait(() => expect(getByTestId('submitting').innerHTML).toBe('false'));
+    // resolve validation and submission
+    act(() => jest.runAllImmediates());
+
+    expect(getByTestId('submitting').innerHTML).toBe('false');
 
     expect(onSubmitMock).toHaveBeenCalledTimes(2);
     expect(onSubmitMock).toHaveBeenCalledWith({
