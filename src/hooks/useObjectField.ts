@@ -1,7 +1,12 @@
 import { useCallback } from 'react';
 import { FormFieldContext } from './formContext';
 import useField, { IField as IScalarField, IFieldSettings } from './useField';
-import { objectFieldReducer, ObjectFieldActionEnum, ObjectFieldAction } from './objectFieldReducer';
+import {
+  objectFieldReducer,
+  ObjectFieldActionEnum,
+  ObjectFieldAction,
+  SetFieldAction,
+} from './objectFieldReducer';
 import { FieldState } from './fieldReducer';
 
 type GetErrorFn = (field: number | string) => void | string;
@@ -56,13 +61,18 @@ export default function useObjectField<
   const setField = useCallback(
     (fieldName: string, value: any) => {
       field.setChanging(true);
-      field.dispatch({ type: ObjectFieldActionEnum.SET_FIELD, field: fieldName, name: '', value });
+      field.dispatch(({
+        type: ObjectFieldActionEnum.SET_FIELD,
+        field: fieldName,
+        name: '',
+        value,
+      } as SetFieldAction) as any);
     },
     [field.setChanging, field.dispatch],
   );
 
   return {
-    ...field,
+    ...(field as any),
     Provider: FormFieldContext.Provider,
     getError,
     getField,

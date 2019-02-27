@@ -1,7 +1,15 @@
 import { useCallback } from 'react';
 import { FormFieldContext } from './formContext';
 import useField, { IField as IScalarField, IFieldSettings } from './useField';
-import { ArrayFieldActionEnum, arrayFieldReducer, ArrayFieldAction } from './arrayFieldReducer';
+import {
+  ArrayFieldActionEnum,
+  arrayFieldReducer,
+  ArrayFieldAction,
+  AddValueAction,
+  RemoveValueAction,
+  RemoveLastValueAction,
+  SetValueAtIndexAction,
+} from './arrayFieldReducer';
 import { FieldState } from './fieldReducer';
 
 type AddItemFn = (value: any) => void;
@@ -62,32 +70,43 @@ export default function useArrayField<
   const addItem = useCallback(
     (value: any) => {
       field.setChanging(true);
-      field.dispatch({ type: ArrayFieldActionEnum.ADD_VALUE, name: '', value });
+      field.dispatch(({
+        type: ArrayFieldActionEnum.ADD_VALUE,
+        name: '',
+        value,
+      } as AddValueAction) as any);
     },
     [field.dispatch, field.setChanging],
   );
   const removeItem = useCallback(
     (index: number) => {
       field.setChanging(true);
-      field.dispatch({ type: ArrayFieldActionEnum.REMOVE_VALUE, name: '', index });
+      field.dispatch(({
+        type: ArrayFieldActionEnum.REMOVE_VALUE,
+        name: '',
+        index,
+      } as RemoveValueAction) as any);
     },
     [field.dispatch, field.setChanging],
   );
 
   const removeLastItem = useCallback(() => {
     field.setChanging(true);
-    field.dispatch({ type: ArrayFieldActionEnum.REMOVE_LAST_VALUE, name: '' });
+    field.dispatch(({
+      type: ArrayFieldActionEnum.REMOVE_LAST_VALUE,
+      name: '',
+    } as RemoveLastValueAction) as any);
   }, [field.dispatch, field.setChanging]);
 
   const setItem = useCallback(
     (index: number | string, value: any) => {
       field.setChanging(true);
-      field.dispatch({
+      field.dispatch(({
         type: ArrayFieldActionEnum.SET_VALUE_AT_INDEX,
         name: '',
         index: Number(index),
         value,
-      });
+      } as SetValueAtIndexAction) as any);
     },
     [field.dispatch, field.setChanging],
   );
