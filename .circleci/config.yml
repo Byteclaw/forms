@@ -11,7 +11,7 @@ jobs:
       - checkout
       - run:
           name: Upgrade yarn
-          command: sudo npm install -g
+          command: sudo npm install -g yarn
       - run:
           name: Installing javascript dependencies
           command: yarn install --cache-folder ~/.yarn-cache
