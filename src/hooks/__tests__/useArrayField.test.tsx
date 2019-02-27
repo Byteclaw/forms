@@ -1,7 +1,9 @@
-// tslint:disable:jsx-no-lambda
-import React, { Fragment, SyntheticEvent } from 'react';
-import { fireEvent, render, wait } from 'react-testing-library';
+// @ts-ignore
+import React, { ConcurrentMode, Fragment, SyntheticEvent, unstable_ConcurrentMode } from 'react';
+import { act, fireEvent, render } from 'react-testing-library';
 import useArrayField from '../useArrayField';
+
+const Concurrent = unstable_ConcurrentMode || ConcurrentMode;
 
 function Input({
   currentValue,
@@ -37,7 +39,6 @@ function Input({
         type="text"
         value={JSON.stringify(field.value)}
       />
-      <span data-testid="error">{JSON.stringify(field.error)}</span>
       <span data-testid="dirty">{field.dirty.toString()}</span>
       <span data-testid="changing">{field.changing.toString()}</span>
       <span data-testid="initialValue">{field.initialValue}</span>
@@ -46,7 +47,9 @@ function Input({
       <span data-testid="valid">{field.valid.toString()}</span>
       <button
         data-testid="addItem"
-        onClick={(e: any) => field.addItem(e.target.value)}
+        onClick={(e: SyntheticEvent<HTMLButtonElement>) => {
+          field.addItem(e.currentTarget.value);
+        }}
         type="button"
       >
         Add
@@ -76,114 +79,180 @@ function Input({
   );
 }
 
-describe('useArrayField hook', () => {
-  it('works corretly', async () => {
-    const onChangeMock = jest.fn();
-    const { getByTestId, rerender } = render(<Input enableReinitialize={true} onChange={onChangeMock} />);
+describe.each([['Sync mode', 'div'], ['Concurrent mode', Concurrent]])(
+  'useArrayField hook (%s)',
+  (_, Container) => {
+    it('works corretly', () => {
+      const onChangeMock = jest.fn();
+      const { getByTestId, rerender } = render(
+        <Container>
+          <Input enableReinitialize onChange={onChangeMock} />
+        </Container>,
+      );
 
-    expect(getByTestId('dirty').innerHTML).toBe('false');
-    expect(getByTestId('changing').innerHTML).toBe('false');
-    expect(getByTestId('initialValue').innerHTML).toBe('');
-    expect(getByTestId('focused').innerHTML).toBe('false');
-    expect(getByTestId('touched').innerHTML).toBe('false');
-
-    // now touch it
-    fireEvent.focus(getByTestId('input'));
-
-    expect(getByTestId('focused').innerHTML).toBe('true');
-    expect(getByTestId('touched').innerHTML).toBe('true');
-
-    fireEvent.blur(getByTestId('input'));
-
-    expect(getByTestId('focused').innerHTML).toBe('false');
-    expect(getByTestId('touched').innerHTML).toBe('true');
-
-    // change the value
-    fireEvent.change(getByTestId('input'), { target: { value: '["A"]' } });
-    fireEvent.change(getByTestId('input'), { target: { value: '["A", "B"]' } });
-    fireEvent.change(getByTestId('input'), { target: { value: '["A","B","C"]' } });
-    fireEvent.change(getByTestId('input'), { target: { value: '["A","B","C","D"]' } });
-    expect((getByTestId('input') as HTMLInputElement).value).toBe('["A","B","C","D"]');
-
-    expect(getByTestId('changing').innerHTML).toBe('true');
-    expect(getByTestId('dirty').innerHTML).toBe('true');
-
-    await wait(() => {
+      expect(getByTestId('dirty').innerHTML).toBe('false');
       expect(getByTestId('changing').innerHTML).toBe('false');
-    });
+      expect(getByTestId('initialValue').innerHTML).toBe('');
+      expect(getByTestId('focused').innerHTML).toBe('false');
+      expect(getByTestId('touched').innerHTML).toBe('false');
 
-    expect(onChangeMock).toHaveBeenCalledTimes(1);
-    expect(onChangeMock).toHaveBeenCalledWith(['A', 'B', 'C', 'D']);
+      // now touch it
+      fireEvent.focus(getByTestId('input'));
 
-    // now change initial value
-    rerender(
-      <Input enableReinitialize={true} initialValue={['a', 'b', 'c', 'd']} onChange={onChangeMock} />,
-    );
+      // flush changes
+      act(() => jest.runTimersToTime(0));
 
-    expect(onChangeMock).toHaveBeenCalledTimes(2);
-    expect(onChangeMock).toHaveBeenCalledWith(['a', 'b', 'c', 'd']);
+      expect(getByTestId('focused').innerHTML).toBe('true');
+      expect(getByTestId('touched').innerHTML).toBe('true');
 
-    expect(getByTestId('dirty').innerHTML).toBe('false');
-    expect((getByTestId('input') as HTMLInputElement).value).toBe('["a","b","c","d"]');
-    expect(getByTestId('initialValue').innerHTML).toBe('abcd');
+      fireEvent.blur(getByTestId('input'));
 
-    // add item
-    fireEvent.click(getByTestId('addItem'), { target: { value: 'e' } });
-    expect(getByTestId('changing').innerHTML).toBe('true');
-    expect((getByTestId('input') as HTMLInputElement).value).toBe('["a","b","c","d","e"]');
+      // flush changes
+      act(() => jest.runTimersToTime(0));
 
-    await wait(() => {
+      expect(getByTestId('focused').innerHTML).toBe('false');
+      expect(getByTestId('touched').innerHTML).toBe('true');
+
+      // change the value
+      fireEvent.change(getByTestId('input'), { target: { value: '["A"]' } });
+      fireEvent.change(getByTestId('input'), { target: { value: '["A", "B"]' } });
+      fireEvent.change(getByTestId('input'), { target: { value: '["A","B","C"]' } });
+      fireEvent.change(getByTestId('input'), { target: { value: '["A","B","C","D"]' } });
+
+      // flush changes
+      act(() => jest.runTimersToTime(0));
+
+      expect((getByTestId('input') as HTMLInputElement).value).toBe('["A","B","C","D"]');
+
+      expect(getByTestId('changing').innerHTML).toBe('true');
+      expect(getByTestId('dirty').innerHTML).toBe('true');
+
+      // resolve input debounce
+      act(() => jest.runTimersToTime(2));
+
+      // flush changes
+      act(() => jest.runTimersToTime(0));
+
       expect(getByTestId('changing').innerHTML).toBe('false');
-      expect(onChangeMock).toHaveBeenCalledTimes(3);
-      expect(onChangeMock).toHaveBeenCalledWith(['a', 'b', 'c', 'd', 'e']);
-    });
 
-    // add item with value
-    fireEvent.click(getByTestId('addItem'), { target: { value: 'f' } });
-    expect(getByTestId('changing').innerHTML).toBe('true');
-    expect((getByTestId('input') as HTMLInputElement).value).toBe('["a","b","c","d","e","f"]');
+      expect(onChangeMock).toHaveBeenCalledTimes(1);
+      expect(onChangeMock).toHaveBeenLastCalledWith(['A', 'B', 'C', 'D'], expect.any(Function));
 
-    await wait(() => {
+      // now change initial value
+      rerender(
+        <Container>
+          <Input enableReinitialize initialValue={['a', 'b', 'c', 'd']} onChange={onChangeMock} />
+        </Container>,
+      );
+
+      expect(onChangeMock).toHaveBeenCalledTimes(2);
+      expect(onChangeMock).toHaveBeenLastCalledWith(['a', 'b', 'c', 'd'], expect.any(Function));
+
+      // flush changes
+      act(() => jest.runAllTimers());
+      // flush changes
+      act(() => jest.runTimersToTime(0));
+
+      expect(getByTestId('dirty').innerHTML).toBe('false');
+      expect((getByTestId('input') as HTMLInputElement).value).toBe('["a","b","c","d"]');
+      expect(getByTestId('initialValue').innerHTML).toBe('abcd');
+
+      // add item
+      fireEvent.click(getByTestId('addItem'), { target: { value: 'e' } });
+
+      // flush changes
+      act(() => jest.runTimersToTime(0));
+
+      expect(getByTestId('changing').innerHTML).toBe('true');
+
+      // resolve debounce
+      act(() => jest.runAllTimers());
+
+      // flush changes
+      act(() => jest.runTimersToTime(0));
+
+      expect((getByTestId('input') as HTMLInputElement).value).toBe('["a","b","c","d","e"]');
       expect(getByTestId('changing').innerHTML).toBe('false');
-      expect(onChangeMock).toHaveBeenCalledTimes(4);
-      expect(onChangeMock).toHaveBeenCalledWith(['a', 'b', 'c', 'd', 'e', 'f']);
-    });
+      expect(onChangeMock).toHaveBeenLastCalledWith(
+        ['a', 'b', 'c', 'd', 'e'],
+        expect.any(Function),
+      );
 
-    fireEvent.click(getByTestId('removeLastItem'));
-    expect(getByTestId('changing').innerHTML).toBe('true');
-    expect((getByTestId('input') as HTMLInputElement).value).toBe('["a","b","c","d","e"]');
+      // add item with value
+      fireEvent.click(getByTestId('addItem'), { target: { value: 'f' } });
 
-    fireEvent.click(getByTestId('removeItem'), { target: { value: 4 } });
-    expect(getByTestId('changing').innerHTML).toBe('true');
-    expect((getByTestId('input') as HTMLInputElement).value).toBe('["a","b","c","d"]');
-    fireEvent.click(getByTestId('removeItem'), { target: { value: 2 } });
-    expect(getByTestId('changing').innerHTML).toBe('true');
-    expect((getByTestId('input') as HTMLInputElement).value).toBe('["a","b","d"]');
+      // flush changes
+      act(() => jest.runTimersToTime(0));
 
-    await wait(() => {
+      expect(getByTestId('changing').innerHTML).toBe('true');
+      expect((getByTestId('input') as HTMLInputElement).value).toBe('["a","b","c","d","e","f"]');
+
+      // resolve debounce
+      act(() => jest.runAllTimers());
+
+      // flush changes
+      act(() => jest.runTimersToTime(0));
+
       expect(getByTestId('changing').innerHTML).toBe('false');
-      expect(onChangeMock).toHaveBeenCalledTimes(5);
-      expect(onChangeMock).toHaveBeenCalledWith(['a', 'b', 'd']);
-    });
+      expect(onChangeMock).toHaveBeenLastCalledWith(
+        ['a', 'b', 'c', 'd', 'e', 'f'],
+        expect.any(Function),
+      );
 
-    fireEvent.click(getByTestId('setItem'), { target: { index: 6, value: 'added' } });
-    expect(getByTestId('changing').innerHTML).toBe('true');
-    expect((getByTestId('input') as HTMLInputElement).value).toBe(
-      '["a","b","d",null,null,null,"added"]',
-    );
+      fireEvent.click(getByTestId('removeLastItem'));
 
-    await wait(() => {
+      // flush changes
+      act(() => jest.runTimersToTime(0));
+
+      expect(getByTestId('changing').innerHTML).toBe('true');
+      expect((getByTestId('input') as HTMLInputElement).value).toBe('["a","b","c","d","e"]');
+
+      fireEvent.click(getByTestId('removeItem'), { target: { value: 4 } });
+
+      // flush changes
+      act(() => jest.runTimersToTime(0));
+
+      expect(getByTestId('changing').innerHTML).toBe('true');
+      expect((getByTestId('input') as HTMLInputElement).value).toBe('["a","b","c","d"]');
+
+      fireEvent.click(getByTestId('removeItem'), { target: { value: 2 } });
+
+      // flush changes
+      act(() => jest.runTimersToTime(0));
+
+      expect(getByTestId('changing').innerHTML).toBe('true');
+      expect((getByTestId('input') as HTMLInputElement).value).toBe('["a","b","d"]');
+
+      // resolve debounce
+      act(() => jest.runAllTimers());
+
+      // flush changes
+      act(() => jest.runTimersToTime(0));
+
       expect(getByTestId('changing').innerHTML).toBe('false');
-      expect(onChangeMock).toHaveBeenCalledTimes(6);
-      expect(onChangeMock).toHaveBeenCalledWith([
-        'a',
-        'b',
-        'd',
-        undefined,
-        undefined,
-        undefined,
-        'added',
-      ]);
+      expect(onChangeMock).toHaveBeenLastCalledWith(['a', 'b', 'd'], expect.any(Function));
+
+      fireEvent.click(getByTestId('setItem'), { target: { index: 6, value: 'added' } });
+
+      // flush changes
+      act(() => jest.runTimersToTime(0));
+
+      expect(getByTestId('changing').innerHTML).toBe('true');
+      expect((getByTestId('input') as HTMLInputElement).value).toBe(
+        '["a","b","d",null,null,null,"added"]',
+      );
+
+      // resolve debounce
+      act(() => jest.runAllTimers());
+
+      // flush changes
+      act(() => jest.runTimersToTime(0));
+
+      expect(getByTestId('changing').innerHTML).toBe('false');
+      expect(onChangeMock).toHaveBeenLastCalledWith(
+        ['a', 'b', 'd', undefined, undefined, undefined, 'added'],
+        expect.any(Function),
+      );
     });
-  });
-});
+  },
+);

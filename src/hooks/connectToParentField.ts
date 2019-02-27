@@ -1,11 +1,34 @@
-import { ReactText } from 'react';
 import { Field as ArrayField } from './useArrayField';
-import { IFieldSettings } from './useField';
+import useField, { IField as ScalarField, IFieldSettings } from './useField';
 import { Field as ObjectField } from './useObjectField';
+import { Form } from './useForm';
+import useArrayField from './useArrayField';
+import useObjectField from './useObjectField';
+import { ArrayFieldAction } from './arrayFieldReducer';
+import { ObjectFieldAction } from './objectFieldReducer';
+
+export default function connectToParentField(
+  name: string | number,
+  parentField: ArrayField<ArrayFieldAction> | ObjectField<ObjectFieldAction> | Form,
+  fieldHook: typeof useArrayField,
+  settings?: IFieldSettings,
+): ArrayField<ArrayFieldAction>;
+export default function connectToParentField(
+  name: string | number,
+  parentField: ArrayField<ArrayFieldAction> | ObjectField<ObjectFieldAction> | Form,
+  fieldHook: typeof useObjectField,
+  settings?: IFieldSettings,
+): ObjectField<ObjectFieldAction>;
+export default function connectToParentField(
+  name: string | number,
+  parentField: ArrayField<ArrayFieldAction> | ObjectField<ObjectFieldAction> | Form,
+  fieldHook: typeof useField,
+  settings?: IFieldSettings,
+): ScalarField;
 
 export default function connectToParentField<R>(
-  name: ReactText | string | number,
-  parentField: ArrayField | ObjectField,
+  name: string | number,
+  parentField: ArrayField<ArrayFieldAction> | ObjectField<ObjectFieldAction>,
   fieldHook: (currentValue?: any, initialValue?: any, errors?: any, settings?: IFieldSettings) => R,
   settings?: IFieldSettings,
 ): R {
