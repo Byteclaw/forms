@@ -5,8 +5,10 @@ interface IProps {
   children: (form: Form) => ReactNode;
 }
 
-export default function FormProvider({ children }: IProps) {
+export function FormProvider({ children }: IProps) {
   const form = useConnectedForm();
 
   return children(form) as ReactElement<any> | null;
 }
+
+export default FormProvider;

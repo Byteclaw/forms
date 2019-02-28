@@ -25,7 +25,7 @@ const defaults = {
   validationSchema: yup.object(),
 };
 
-export default function Form({
+export function Form({
   as: As = defaults.as,
   children,
   enableReinitialize = defaults.enableReinitialize,
@@ -57,3 +57,5 @@ export default function Form({
     </form.FormProvider>
   );
 }
+
+export default Form;

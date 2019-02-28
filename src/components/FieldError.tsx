@@ -9,7 +9,7 @@ interface IProps {
   name: number | string;
 }
 
-export default function FieldError({ as = null, children, name, ...rest }: IProps) {
+export function FieldError({ as = null, children, name, ...rest }: IProps) {
   const fieldState = useConnectedField(name);
 
   if (as != null && children == null) {
@@ -22,3 +22,5 @@ export default function FieldError({ as = null, children, name, ...rest }: IProp
 
   return null;
 }
+
+export default FieldError;

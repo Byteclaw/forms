@@ -14,7 +14,7 @@ interface IProps {
   name: number | string;
 }
 
-export default function ArrayField({ children, debounceDelay, name }: IProps) {
+export function ArrayField({ children, debounceDelay, name }: IProps) {
   const parentField = useParentField();
   const field = connectToParentField(name, parentField, useArrayField, {
     debounceDelay,
@@ -26,3 +26,5 @@ export default function ArrayField({ children, debounceDelay, name }: IProps) {
     </field.Provider>
   );
 }
+
+export default ArrayField;

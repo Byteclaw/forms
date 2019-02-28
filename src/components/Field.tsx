@@ -23,7 +23,7 @@ interface IProps {
   [key: string]: any;
 }
 
-const Field = forwardRef(
+export const Field = forwardRef(
   ({ as = 'input', children = null, debounceDelay = 300, name, ...rest }: IProps, ref) => {
     const parentField = useParentField();
     const field = connectToParentField(name, parentField, useField, {

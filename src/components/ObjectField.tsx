@@ -14,7 +14,7 @@ interface IProps {
   name: number | string;
 }
 
-export default function ObjectField({ children, debounceDelay, name }: IProps) {
+export function ObjectField({ children, debounceDelay, name }: IProps) {
   const parentField = useParentField();
   const field = connectToParentField(name, parentField, useObjectField, {
     debounceDelay,
@@ -26,3 +26,5 @@ export default function ObjectField({ children, debounceDelay, name }: IProps) {
     </field.Provider>
   );
 }
+
+export default ObjectField;
