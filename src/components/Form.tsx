@@ -9,7 +9,7 @@ type FormRenderer = (form: FormAPI) => ReactNode;
 interface IProps {
   as?: string | ComponentType<any>;
   children: FormRenderer | ReactNode | ReactNodeArray;
-  enableReinitialize: boolean;
+  enableReinitialize?: boolean;
   initialValues?: object;
   onSubmit?: OnSubmitFn;
   validateOnChange?: boolean;
