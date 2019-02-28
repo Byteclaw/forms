@@ -1,4 +1,4 @@
-import React, { ComponentType, createElement, ReactNode, ReactNodeArray } from 'react';
+import React, { ComponentType, ReactNode, ReactNodeArray } from 'react';
 import * as yup from 'yup';
 import useForm, { Form as FormAPI } from '../hooks/useForm';
 
@@ -9,6 +9,7 @@ type FormRenderer = (form: FormAPI) => ReactNode;
 interface IProps {
   as?: string | ComponentType<any>;
   children: FormRenderer | ReactNode | ReactNodeArray;
+  enableReinitialize: boolean;
   initialValues?: object;
   onSubmit?: OnSubmitFn;
   validateOnChange?: boolean;
@@ -17,6 +18,7 @@ interface IProps {
 
 const defaults = {
   as: 'form',
+  enableReinitialize: false,
   initialValue: {},
   onSubmit: async () => undefined,
   validateOnChange: false,
@@ -26,13 +28,20 @@ const defaults = {
 export default function Form({
   as: As = defaults.as,
   children,
+  enableReinitialize = defaults.enableReinitialize,
   initialValues = defaults.initialValue,
   onSubmit = defaults.onSubmit,
   validateOnChange = defaults.validateOnChange,
   validationSchema = defaults.validationSchema,
   ...rest
 }: IProps) {
-  const form = useForm(initialValues, onSubmit, validationSchema, validateOnChange);
+  const form = useForm(
+    initialValues,
+    onSubmit,
+    validationSchema,
+    validateOnChange,
+    enableReinitialize,
+  );
 
   return (
     <form.FormProvider value={form}>

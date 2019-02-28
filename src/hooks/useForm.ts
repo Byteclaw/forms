@@ -25,6 +25,7 @@ export default function useForm(
   onSubmit: (values: any) => Promise<any>,
   validator: yup.Schema<any> = defaultValidator,
   validateOnChange: boolean = false,
+  enableReinitialize: boolean = false,
 ): Form {
   const validate = useCallback(
     (value: any, dispatch: Dispatch<FormAction>): Promise<any> => {
@@ -61,6 +62,7 @@ export default function useForm(
     [validate, validateOnChange],
   );
   const field = useObjectField<FormState, FormAction>(undefined, initialValue, undefined, {
+    enableReinitialize,
     debounceDelay: 0,
     onChange: onChange as any,
     initialState: {
