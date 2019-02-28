@@ -4,7 +4,9 @@ import useArrayField, { Field } from '../hooks/useArrayField';
 import useParentField from '../hooks/useParentField';
 import { ArrayFieldAction } from '../hooks/arrayFieldReducer';
 
-type ArrayFieldRenderer = (field: Field<ArrayFieldAction>) => ReactNode;
+export type ArrayFieldAPI = Field<ArrayFieldAction>;
+
+export type ArrayFieldRenderer = (field: ArrayFieldAPI) => ReactNode;
 
 interface IProps {
   children: ArrayFieldRenderer | ReactNode | ReactNodeArray;

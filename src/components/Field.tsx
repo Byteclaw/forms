@@ -11,7 +11,9 @@ import connectToParentField from '../hooks/connectToParentField';
 import useField, { IField as FieldAPI } from '../hooks/useField';
 import useParentField from '../hooks/useParentField';
 
-type FieldRenderFn = (field: FieldAPI) => ReactNode;
+export type FieldRenderFn = (field: FieldAPI) => ReactNode;
+
+export { FieldAPI };
 
 interface IProps {
   as?: string | ComponentType<any>;

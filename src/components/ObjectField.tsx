@@ -4,7 +4,9 @@ import useObjectField, { Field } from '../hooks/useObjectField';
 import useParentField from '../hooks/useParentField';
 import { ObjectFieldAction } from '../hooks/objectFieldReducer';
 
-type ObjectFieldRenderer = (field: Field<ObjectFieldAction>) => ReactNode;
+export type ObjectFieldAPI = Field<ObjectFieldAction>;
+
+export type ObjectFieldRenderer = (field: ObjectFieldAPI) => ReactNode;
 
 interface IProps {
   children: ObjectFieldRenderer | ReactNode | ReactNodeArray;
