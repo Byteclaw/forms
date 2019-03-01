@@ -29,6 +29,7 @@ export interface IField<TActions = FieldAction, TValue = any> {
   dirty: boolean;
   dispatch: Dispatch<TActions>;
   errors: { [key: string]: string } | string | undefined;
+  enableReinitialize: boolean;
   focused: boolean;
   initialValue: any;
   isDirty: IsDirtyFn;
@@ -54,6 +55,11 @@ export interface IFieldSettings<
   onChangingChange?: OnChangingChangeFn;
   onDirtyChange?: OnDirtyChangeFn;
   onFocusChange?: OnFocusChangeFn;
+  /**
+   * This is used to propagate change to parent if the initialValues of Object/Array field has changed
+   * But the underlying scalar value for this field hasn't (edge case)
+   */
+  parentInitialValue?: any;
   reducer?: Reducer<TFieldState, TFieldActions>;
 }
 
@@ -74,13 +80,14 @@ export default function useField<
     onChangingChange = noop,
     onDirtyChange = noop,
     onFocusChange = noop,
+    parentInitialValue,
     reducer,
   }: IFieldSettings<TFieldState, TFieldActions> = {},
 ): IField<TFieldActions> {
   const form = useConnectedForm();
   const stateTracker = useRef({
+    previousParentInitialValue: parentInitialValue,
     lastValue: initialState ? initialState.initialValue : currentValue || initialValue,
-    lastInitialValue: initialState ? initialState.initialValue : initialValue,
     changing: false,
     dirty: false,
     focused: false,
@@ -168,13 +175,24 @@ export default function useField<
     notifyChange(state.value);
   }
 
-  // change initial value if it has changed
+  // propagate change to parent if parent's initial value has changed and current value of this field
+  // is different than it's initial value
+  // this solves the case when user changes some field in object field
+  // then reinitializes the form with other field's initial values different except the on he changed
+  // the value of form should be initial values + his change in current field
   if (
-    initialValue !== stateTracker.current.lastInitialValue &&
-    initialValue !== state.initialValue
+    parentInitialValue !== stateTracker.current.previousParentInitialValue &&
+    state.value !== state.initialValue
   ) {
-    stateTracker.current.lastInitialValue = initialValue;
+    stateTracker.current.previousParentInitialValue = parentInitialValue;
+    // parent's (object, array) value has changed (so initial and value is changed)
+    // make sure we propagate the change on this field again so we are sure
+    // that value on parent for this child is consistent
+    onChange(state.value, dispatch);
+  }
 
+  // change initial value if it has changed
+  if (initialValue !== state.initialValue) {
     dispatch({ type: FieldActionType.SET_INITIAL_VALUE, name: '', value: initialValue });
 
     if (enableReinitialize) {
@@ -199,6 +217,7 @@ export default function useField<
     // form sets errors in it's state, so we need to allow local error to be overriden
     errors: error,
     ...state,
+    enableReinitialize,
     changing,
     dirty,
     dispatch,

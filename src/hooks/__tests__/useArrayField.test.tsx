@@ -135,7 +135,6 @@ describe.each([['Sync mode', 'div'], ['Concurrent mode', Concurrent]])(
 
       expect(getByTestId('changing').innerHTML).toBe('false');
 
-      expect(onChangeMock).toHaveBeenCalledTimes(1);
       expect(onChangeMock).toHaveBeenLastCalledWith(['A', 'B', 'C', 'D'], expect.any(Function));
 
       // now change initial value
@@ -145,7 +144,6 @@ describe.each([['Sync mode', 'div'], ['Concurrent mode', Concurrent]])(
         </Container>,
       );
 
-      expect(onChangeMock).toHaveBeenCalledTimes(2);
       expect(onChangeMock).toHaveBeenLastCalledWith(['a', 'b', 'c', 'd'], expect.any(Function));
 
       // flush changes

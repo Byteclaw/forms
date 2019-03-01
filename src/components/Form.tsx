@@ -14,6 +14,7 @@ interface IProps {
   onSubmit?: OnSubmitFn;
   validateOnChange?: boolean;
   validationSchema?: any;
+  [extra: string]: any;
 }
 
 const defaults = {

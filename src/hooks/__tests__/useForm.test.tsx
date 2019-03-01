@@ -1,4 +1,5 @@
-import React from 'react';
+// @ts-ignore
+import React, { ConcurrentMode, unstable_ConcurrentMode } from 'react';
 import { act, fireEvent, render } from 'react-testing-library';
 import * as yup from 'yup';
 import Field from '../../components/Field';
@@ -6,23 +7,27 @@ import FieldError from '../../components/FieldError';
 import ObjectField from '../../components/ObjectField';
 import useForm from '../useForm';
 
+const Concurrent = unstable_ConcurrentMode || ConcurrentMode;
+
 function Form({
+  enableReinitialize,
   initialValues,
   onSubmit,
   validator,
 }: {
+  enableReinitialize?: boolean;
   initialValues?: { [key: string]: any };
   onSubmit: () => any;
   validator?: any;
 }) {
-  const form = useForm(initialValues, onSubmit, validator);
+  const form = useForm(initialValues, onSubmit, validator, false, enableReinitialize);
 
   return (
     <form data-testid="form" onSubmit={form.handleSubmit}>
       <form.FormProvider value={form}>
         <form.FieldProvider value={form}>
           <Field data-testid="email-input" debounceDelay={2} name="email" type="email" />
-          <Field data-testid="password-input" debounceDelay={20} name="password" type="password" />
+          <Field data-testid="password-input" debounceDelay={2} name="password" type="password" />
           <ObjectField debounceDelay={2} name="object">
             <Field data-testid="color-input" debounceDelay={1} name="color" />
           </ObjectField>
@@ -46,7 +51,7 @@ const validationSchema = yup.object().shape({
   password: yup.string().required(),
 });
 
-describe('useForm hook', () => {
+describe.each([['Sync mode', 'div'], ['Concurrent mode', Concurrent]])('useForm hook (%s)', () => {
   it('works correctly', () => {
     const onSubmitMock = jest.fn().mockImplementationOnce(() => new Promise(r => r()));
     const { getByTestId } = render(<Form onSubmit={onSubmitMock} validator={validationSchema} />);
@@ -123,7 +128,7 @@ describe('useForm hook', () => {
       password: 'test',
     };
     const { getByTestId, rerender } = render(
-      <Form initialValues={initialValues} onSubmit={onSubmitMock} />,
+      <Form enableReinitialize initialValues={initialValues} onSubmit={onSubmitMock} />,
     );
 
     expect((getByTestId('email-input') as HTMLInputElement).value).toBe('a@a.com');
@@ -183,7 +188,7 @@ describe('useForm hook', () => {
     expect(getByTestId('submitting').innerHTML).toBe('false');
 
     expect(onSubmitMock).toHaveBeenCalledTimes(1);
-    expect(onSubmitMock).toHaveBeenCalledWith({
+    expect(onSubmitMock).toHaveBeenLastCalledWith({
       email: 'b@b.com',
       object: { color: 'new-color' },
       password: 'new-password',
@@ -193,12 +198,15 @@ describe('useForm hook', () => {
     // because the initial value of test is the same
     // it should keep the value of input
     const newInitialValues = {
+      // email should change to this value
       email: 'c@c.com',
+      // object should change to this value
       object: { color: 'test-color' },
+      // password should stay the same (new-password)
       password: 'test',
     };
 
-    rerender(<Form initialValues={newInitialValues} onSubmit={onSubmitMock} />);
+    rerender(<Form enableReinitialize initialValues={newInitialValues} onSubmit={onSubmitMock} />);
 
     expect((getByTestId('email-input') as HTMLInputElement).value).toBe('c@c.com');
     expect((getByTestId('password-input') as HTMLInputElement).value).toBe('new-password');
@@ -209,9 +217,9 @@ describe('useForm hook', () => {
     // resolve debounce on all inputs
     act(() => jest.runAllTimers());
     // resolve debounce on parent inputs
-    act(() => jest.runOnlyPendingTimers());
+    act(() => jest.runAllTimers());
     // resolve debounce on form
-    act(() => jest.runOnlyPendingTimers());
+    act(() => jest.runAllTimers());
 
     expect(getByTestId('changing').innerHTML).toBe('false');
 
@@ -224,7 +232,7 @@ describe('useForm hook', () => {
     expect(getByTestId('submitting').innerHTML).toBe('false');
 
     expect(onSubmitMock).toHaveBeenCalledTimes(2);
-    expect(onSubmitMock).toHaveBeenCalledWith({
+    expect(onSubmitMock).toHaveBeenLastCalledWith({
       email: 'c@c.com',
       object: {
         color: 'test-color',
