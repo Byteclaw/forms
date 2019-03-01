@@ -82,7 +82,7 @@ function Input({
 describe.each([['Sync mode', 'div'], ['Concurrent mode', Concurrent]])(
   'useArrayField hook (%s)',
   (_, Container) => {
-    it('works corretly', () => {
+    it('works correctly', () => {
       const onChangeMock = jest.fn();
       const { getByTestId, rerender } = render(
         <Container>
@@ -251,6 +251,38 @@ describe.each([['Sync mode', 'div'], ['Concurrent mode', Concurrent]])(
         ['a', 'b', 'd', undefined, undefined, undefined, 'added'],
         expect.any(Function),
       );
+    });
+
+    it('removes initial value and adds empty (issue #11)', () => {
+      const onChangeMock = jest.fn();
+      const { getByTestId } = render(
+        <Container>
+          <Input initialValue={['a', 'b']} onChange={onChangeMock} />
+        </Container>,
+      );
+
+      expect(getByTestId('dirty').innerHTML).toBe('false');
+      expect(getByTestId('changing').innerHTML).toBe('false');
+      expect(getByTestId('initialValue').innerHTML).toBe('ab');
+      expect((getByTestId('input') as HTMLInputElement).value).toBe('["a","b"]');
+      expect(getByTestId('focused').innerHTML).toBe('false');
+      expect(getByTestId('touched').innerHTML).toBe('false');
+
+      // remove the last item
+      fireEvent.click(getByTestId('removeItem'), { target: { value: 1 } });
+
+      // resolve debounce
+      act(() => jest.runAllTimers());
+
+      expect((getByTestId('input') as HTMLInputElement).value).toBe('["a"]');
+
+      // now add empty item
+      fireEvent.click(getByTestId('addItem'), { target: {} });
+
+      // resolve debounce
+      act(() => jest.runAllTimers());
+
+      expect((getByTestId('input') as HTMLInputElement).value).toBe('["a",""]');
     });
   },
 );
