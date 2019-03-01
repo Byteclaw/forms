@@ -3,6 +3,7 @@ import * as yup from 'yup';
 import { FormContext, FormFieldContext } from './formContext';
 import useObjectField, { Field } from './useObjectField';
 import { formReducer, FormActionEnum, FormAction, FormState } from './formReducer';
+import { useMountedTracker } from './useMountedTracker';
 
 type HandleSubmitFn = (e: SyntheticEvent<HTMLFormElement>) => Promise<any> | any;
 
@@ -27,6 +28,8 @@ export default function useForm(
   validateOnChange: boolean = false,
   enableReinitialize: boolean = false,
 ): Form {
+  const mounted = useMountedTracker();
+
   const validate = useCallback(
     (value: any, dispatch: Dispatch<FormAction>): Promise<any> => {
       if (!validator) {
@@ -95,6 +98,11 @@ export default function useForm(
           return onSubmit(val);
         })
         .then(() => {
+          // do nothing if form is unmounted
+          if (!mounted.current) {
+            return;
+          }
+
           field.dispatch({ type: FormActionEnum.SUBMIT_SUCCESS });
         })
         .catch((err: any) => field.dispatch({ type: FormActionEnum.SUBMIT_FAIL, error: err }));
@@ -107,6 +115,7 @@ export default function useForm(
       field.value,
       field.submitting,
       field.validating,
+      mounted,
     ],
   );
 

@@ -234,5 +234,41 @@ describe.each([['SyncMode', 'div'], ['ConcurrentMode', Concurrent]])(
         );
       });
     });
+
+    it('does not set state on unmounted form (issue #9)', () => {
+      let onSubmit = () => undefined;
+      const validator: any = {
+        validate(values: any) {
+          return Promise.resolve(values);
+        },
+      };
+      const { getByTestId, rerender, unmount } = render(
+        <Container>
+          <Form data-testid="form" onSubmit={onSubmit} validationSchema={validator}>
+            <span />
+          </Form>
+        </Container>,
+      );
+
+      onSubmit = () =>
+        new Promise(r => {
+          unmount();
+          r();
+        });
+
+      // rerender with new onSubmit
+      rerender(
+        <Container>
+          <Form data-testid="form" onSubmit={onSubmit} validationSchema={validator}>
+            <span />
+          </Form>
+        </Container>,
+      );
+
+      // now send the form
+      fireEvent.submit(getByTestId('form'));
+
+      act(() => jest.runAllTimers());
+    });
   },
 );
