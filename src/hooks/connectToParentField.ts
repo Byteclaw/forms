@@ -50,6 +50,8 @@ export default function connectToParentField<R>(
     ...settings,
     // bubble enableReinitialize down the tree
     enableReinitialize: parentField.enableReinitialize,
+    // force propagation of childrens' values back to parentField
+    parentInitialValue: parentField.initialValue,
     onChange,
     onChangingChange: (changing: boolean) => parentField.setChanging(changing, name),
     onDirtyChange: (dirty: boolean) => parentField.setDirty(dirty, name),
