@@ -2,6 +2,7 @@ import debounce from 'lodash.debounce';
 import { useCallback, useMemo, useReducer, useRef, Dispatch, Reducer } from 'react';
 import useConnectedForm from './useConnectedForm';
 import { fieldReducer, FieldActionType, FieldAction, FieldState } from './fieldReducer';
+import { useMountedTracker } from './useMountedTracker';
 
 export interface IFieldState {
   dirty: Set<string | number>;
@@ -85,6 +86,7 @@ export default function useField<
   }: IFieldSettings<TFieldState, TFieldActions> = {},
 ): IField<TFieldActions> {
   const form = useConnectedForm();
+  const mounted = useMountedTracker();
   const stateTracker = useRef({
     previousParentInitialValue: parentInitialValue,
     lastValue: initialState ? initialState.initialValue : currentValue || initialValue,
@@ -131,10 +133,14 @@ export default function useField<
   );
   const notifyChange = useMemo(() => {
     return debounce(value => {
+      if (!mounted.current) {
+        return;
+      }
+
       onChange(value, dispatch);
       setChanging(false);
     }, debounceDelay);
-  }, [debounceDelay, dispatch, onChange, setChanging]);
+  }, [debounceDelay, dispatch, onChange, setChanging, mounted]);
 
   const setValue = useCallback(
     newValue => {

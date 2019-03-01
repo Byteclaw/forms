@@ -198,5 +198,34 @@ describe.each([['Sync mode', 'div'], ['Concurrent mode', Concurrent]])(
       expect(onChangeMock).not.toHaveBeenLastCalledWith('AB', expect.any(Function));
       expect((getByTestId('input') as HTMLInputElement).value).toBe('test-value');
     });
+
+    it('cancels debounced changes if is unmounted (issue #9)', () => {
+      const onChange = jest.fn();
+      const { getByTestId, rerender, unmount } = render(
+        <Container>
+          <Input onChange={onChange} />
+        </Container>,
+      );
+
+      const onChangingChange = jest.fn(() => setTimeout(unmount, 0));
+
+      rerender(
+        <Container>
+          <Input onChange={onChange} onChangingChange={onChangingChange} />
+        </Container>,
+      );
+
+      // now change the value (change is debounced)
+      fireEvent.change(getByTestId('input'), { target: { value: 'aaaa' } });
+
+      act(() => jest.runTimersToTime(0));
+      expect(onChangingChange).toHaveBeenCalledTimes(1);
+      act(() => jest.runTimersToTime(0));
+
+      // now resolve debounce
+      act(() => jest.runAllTimers());
+
+      expect(onChange).not.toHaveBeenCalled();
+    });
   },
 );
