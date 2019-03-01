@@ -9,7 +9,7 @@ import FormProvider from '../FormProvider';
 
 const Concurrent = unstable_ConcurrentMode || ConcurrentMode;
 
-describe.each([['SyncMode', 'div'] /*, ['ConcurrentMode', Concurrent]*/])(
+describe.each([['SyncMode', 'div'], ['ConcurrentMode', Concurrent]])(
   'Form component (%s)',
   (_, Container) => {
     describe('validateOnChange prop', () => {
