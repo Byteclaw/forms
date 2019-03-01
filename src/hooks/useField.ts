@@ -29,6 +29,7 @@ export interface IField<TActions = FieldAction, TValue = any> {
   dirty: boolean;
   dispatch: Dispatch<TActions>;
   errors: { [key: string]: string } | string | undefined;
+  enableReinitialize: boolean;
   focused: boolean;
   initialValue: any;
   isDirty: IsDirtyFn;
@@ -80,7 +81,6 @@ export default function useField<
   const form = useConnectedForm();
   const stateTracker = useRef({
     lastValue: initialState ? initialState.initialValue : currentValue || initialValue,
-    lastInitialValue: initialState ? initialState.initialValue : initialValue,
     changing: false,
     dirty: false,
     focused: false,
@@ -169,12 +169,7 @@ export default function useField<
   }
 
   // change initial value if it has changed
-  if (
-    initialValue !== stateTracker.current.lastInitialValue &&
-    initialValue !== state.initialValue
-  ) {
-    stateTracker.current.lastInitialValue = initialValue;
-
+  if (initialValue !== state.initialValue) {
     dispatch({ type: FieldActionType.SET_INITIAL_VALUE, name: '', value: initialValue });
 
     if (enableReinitialize) {
@@ -199,6 +194,7 @@ export default function useField<
     // form sets errors in it's state, so we need to allow local error to be overriden
     errors: error,
     ...state,
+    enableReinitialize,
     changing,
     dirty,
     dispatch,

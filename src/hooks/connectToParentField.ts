@@ -48,6 +48,8 @@ export default function connectToParentField<R>(
 
   return fieldHook(currentValue, initialValue, parentField.getError(name), {
     ...settings,
+    // bubble enableReinitialize down the tree
+    enableReinitialize: parentField.enableReinitialize,
     onChange,
     onChangingChange: (changing: boolean) => parentField.setChanging(changing, name),
     onDirtyChange: (dirty: boolean) => parentField.setDirty(dirty, name),
