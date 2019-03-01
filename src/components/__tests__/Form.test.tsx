@@ -236,7 +236,7 @@ describe.each([['SyncMode', 'div'], ['ConcurrentMode', Concurrent]])(
     });
 
     it('does not set state on unmounted form (issue #9)', () => {
-      let onSubmit = () => undefined;
+      let onSubmit = async () => undefined;
       const validator: any = {
         validate(values: any) {
           return Promise.resolve(values);
