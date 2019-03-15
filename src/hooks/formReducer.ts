@@ -105,7 +105,7 @@ export function formReducer(
     case FormActionEnum.VALIDATION_SUCCESS: {
       return {
         ...state,
-        errors: {},
+        errors: undefined,
         valid: true,
         validating: false,
       };

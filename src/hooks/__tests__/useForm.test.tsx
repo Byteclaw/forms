@@ -36,6 +36,7 @@ function Form({
           </FieldError>
         </form.FieldProvider>
       </form.FormProvider>
+      <span data-testid="valid">{form.valid.toString()}</span>
       <span data-testid="changing">{form.changing.toString()}</span>
       <span data-testid="submitting">{form.submitting.toString()}</span>
       <span data-testid="validating">{form.validating.toString()}</span>
@@ -59,6 +60,7 @@ describe.each([['Sync mode', 'div'], ['Concurrent mode', Concurrent]])('useForm 
     expect(getByTestId('changing').innerHTML).toBe('false');
     expect(getByTestId('submitting').innerHTML).toBe('false');
     expect(getByTestId('validating').innerHTML).toBe('false');
+    expect(getByTestId('valid').innerHTML).toBe('true');
 
     fireEvent.change(getByTestId('email-input'), { target: { value: 'a' } });
     fireEvent.change(getByTestId('password-input'), { target: { value: 'a' } });
@@ -100,6 +102,7 @@ describe.each([['Sync mode', 'div'], ['Concurrent mode', Concurrent]])('useForm 
     // this'll finish the validation but also it'll finish submission too
     act(() => jest.runAllImmediates());
 
+    expect(getByTestId('valid').innerHTML).toBe('true');
     expect(getByTestId('validating').innerHTML).toBe('false');
     expect(getByTestId('submitting').innerHTML).toBe('false');
 
@@ -117,6 +120,7 @@ describe.each([['Sync mode', 'div'], ['Concurrent mode', Concurrent]])('useForm 
     act(() => jest.runAllImmediates());
 
     expect(getByTestId('validating').innerHTML).toBe('false');
+    expect(getByTestId('valid').innerHTML).toBe('false');
     expect(getByTestId('submitting').innerHTML).toBe('false');
     expect(getByTestId('form-error').innerHTML).toBe('Submit error');
   });
