@@ -1,6 +1,6 @@
-import debounce from 'lodash.debounce';
 import { useCallback, useMemo, useReducer, useRef, Dispatch, Reducer } from 'react';
 import useConnectedForm from './useConnectedForm';
+import { useDebouncedCallback } from './useDebouncedCallback';
 import { fieldReducer, FieldActionType, FieldAction, FieldState } from './fieldReducer';
 import { useMountedTracker } from './useMountedTracker';
 
@@ -86,7 +86,6 @@ export default function useField<
   }: IFieldSettings<TFieldState, TFieldActions> = {},
 ): IField<TFieldActions> {
   const form = useConnectedForm();
-  const mounted = useMountedTracker();
   const stateTracker = useRef({
     previousParentInitialValue: parentInitialValue,
     lastValue: initialState ? initialState.initialValue : currentValue || initialValue,
@@ -131,17 +130,14 @@ export default function useField<
       }),
     [dispatch],
   );
-  const notifyChange = useMemo(() => {
-    return debounce(value => {
-      if (!mounted.current) {
-        return;
-      }
-
+  const [notifyChange, cancelNotifyChange] = useDebouncedCallback(
+    (value: any) => {
       onChange(value, dispatch);
       setChanging(false);
-    }, debounceDelay);
-  }, [debounceDelay, dispatch, onChange, setChanging, mounted]);
-
+    },
+    debounceDelay,
+    [debounceDelay, dispatch, onChange, setChanging],
+  );
   const setValue = useCallback(
     newValue => {
       // ignore change if form is submitting/validating
@@ -209,7 +205,7 @@ export default function useField<
       stateTracker.current.lastValue = initialValue;
 
       // cancel previous debounced on change
-      notifyChange.cancel();
+      cancelNotifyChange();
 
       // force as not changing
       setChanging(false);

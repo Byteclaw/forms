@@ -1,4 +1,5 @@
 import {
+  FC,
   ComponentType,
   createElement,
   forwardRef,
@@ -23,7 +24,7 @@ interface IProps {
   [key: string]: any;
 }
 
-export const Field = forwardRef(
+export const Field: FC<IProps> = forwardRef(
   ({ as = 'input', children = null, debounceDelay = 300, name, ...rest }: IProps, ref) => {
     const parentField = useParentField();
     const field = connectToParentField(name, parentField, useField, {

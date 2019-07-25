@@ -1,6 +1,6 @@
+import { act, fireEvent, render } from '@testing-library/react';
 // @ts-ignore
 import React, { unstable_ConcurrentMode, ConcurrentMode, Fragment } from 'react';
-import { act, fireEvent, render } from 'react-testing-library';
 import * as yup from 'yup';
 import Field from '../Field';
 import FieldError from '../FieldError';

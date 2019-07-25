@@ -1,6 +1,6 @@
+import { act, fireEvent, render } from '@testing-library/react';
 // @ts-ignore
 import React, { ConcurrentMode, Fragment, SyntheticEvent, unstable_ConcurrentMode } from 'react';
-import { fireEvent, render, act } from 'react-testing-library';
 import useField from '../useField';
 import { FormContext } from '../formContext';
 

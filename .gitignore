@@ -4,3 +4,4 @@ coverage
 .envrc
 .vscode/*
 !.vscode/tasks.json
+*.log
