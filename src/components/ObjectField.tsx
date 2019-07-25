@@ -1,12 +1,12 @@
 import React, { ReactNode, ReactNodeArray } from 'react';
 import { connectToParentField } from '../hooks/connectToParentField';
-import { useObjectField, Field } from '../hooks/useObjectField';
+import { useObjectField, ObjectFieldAPI } from '../hooks/useObjectField';
 import { useParentField } from '../hooks/useParentField';
 import { ObjectFieldAction } from '../hooks/objectFieldReducer';
 
-export type ObjectFieldAPI = Field<ObjectFieldAction>;
+// export type ObjectFieldAPI = Field<ObjectFieldAction>;
 
-export type ObjectFieldRenderer = (field: ObjectFieldAPI) => ReactNode;
+export type ObjectFieldRenderer = (field: ObjectFieldAPI<ObjectFieldAction>) => ReactNode;
 
 interface IProps {
   children: ObjectFieldRenderer | ReactNode | ReactNodeArray;

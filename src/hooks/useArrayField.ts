@@ -19,7 +19,7 @@ type RemoveLastItemFn = () => void;
 type RemoveItemFn = (index: number) => void;
 type SetItemFn = (index: number | string, value: any) => void;
 
-export type Field<TActions> = IScalarField<TActions> & {
+export type ArrayFieldAPI<TActions> = IScalarField<TActions> & {
   addItem: AddItemFn;
   getError: GetErrorFn;
   getInitialItem: GetItemFn;
@@ -44,7 +44,7 @@ export function useArrayField<
   initialValue: any[] = defaultInitialState,
   errors?: string | { [key: string]: string } | undefined,
   settings?: IFieldSettings<TFieldState, TFieldActions>,
-): Field<TFieldActions> {
+): ArrayFieldAPI<TFieldActions> {
   const field = useField<TFieldState, TFieldActions>(currentValue, initialValue, errors, {
     enableReinitialize: false,
     reducer: arrayFieldReducer as any,

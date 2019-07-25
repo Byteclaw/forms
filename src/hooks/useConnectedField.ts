@@ -1,6 +1,6 @@
-import useParentField from './useParentField';
+import { useParentField } from './useParentField';
 
-export interface IField {
+export interface IFieldReadOnly {
   dirty: boolean;
   error: void | string;
   focused: boolean;
@@ -8,7 +8,7 @@ export interface IField {
   valid: boolean;
 }
 
-export function useConnectedField(name: string | number = ''): IField {
+export function useConnectedField(name: string | number = ''): IFieldReadOnly {
   const field = useParentField();
   const error = field.getError(name);
 

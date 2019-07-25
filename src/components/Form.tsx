@@ -1,6 +1,6 @@
 import React, { ComponentType, ReactNode, ReactNodeArray } from 'react';
 import * as yup from 'yup';
-import { useForm, Form as FormAPI } from '../hooks/useForm';
+import { useForm, FormAPI } from '../hooks/useForm';
 
 type OnSubmitFn = (values: any) => Promise<any>;
 

@@ -1,14 +1,14 @@
 import { useContext } from 'react';
 import { FormFieldContext } from './formContext';
-import { Field as ArrayField } from './useArrayField';
-import { Field as ObjectField } from './useObjectField';
-import { Form } from './useForm';
+import { ArrayFieldAPI } from './useArrayField';
+import { ObjectFieldAPI } from './useObjectField';
+import { FormAPI } from './useForm';
 import { ArrayFieldAction } from './arrayFieldReducer';
 import { ObjectFieldAction } from './objectFieldReducer';
 
 export function useParentField():
-  | ArrayField<ArrayFieldAction>
-  | Form
-  | ObjectField<ObjectFieldAction> {
+  | ArrayFieldAPI<ArrayFieldAction>
+  | FormAPI
+  | ObjectFieldAPI<ObjectFieldAction> {
   return useContext(FormFieldContext);
 }

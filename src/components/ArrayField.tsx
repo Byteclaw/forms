@@ -1,12 +1,12 @@
 import React, { ReactNode, ReactNodeArray } from 'react';
 import { connectToParentField } from '../hooks/connectToParentField';
-import { useArrayField, Field } from '../hooks/useArrayField';
+import { useArrayField, ArrayFieldAPI } from '../hooks/useArrayField';
 import { useParentField } from '../hooks/useParentField';
 import { ArrayFieldAction } from '../hooks/arrayFieldReducer';
 
-export type ArrayFieldAPI = Field<ArrayFieldAction>;
+// export type ArrayFieldAPI = Field<ArrayFieldAction>;
 
-export type ArrayFieldRenderer = (field: ArrayFieldAPI) => ReactNode;
+export type ArrayFieldRenderer = (field: ArrayFieldAPI<ArrayFieldAction>) => ReactNode;
 
 interface IProps {
   children: ArrayFieldRenderer | ReactNode | ReactNodeArray;

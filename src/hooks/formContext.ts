@@ -1,11 +1,11 @@
 import { Context, createContext } from 'react';
-import { Field as ArrayField } from './useArrayField';
-import { Form } from './useForm';
-import { Field as ObjectField } from './useObjectField';
+import { ArrayFieldAPI } from './useArrayField';
+import { FormAPI } from './useForm';
+import { ObjectFieldAPI } from './useObjectField';
 import { ArrayFieldAction } from './arrayFieldReducer';
 import { ObjectFieldAction } from './objectFieldReducer';
 
-export const FormContext: Context<Form> = createContext({} as any);
+export const FormContext: Context<FormAPI> = createContext({} as any);
 export const FormFieldContext: Context<
-  ArrayField<ArrayFieldAction> | Form | ObjectField<ObjectFieldAction>
+  ArrayFieldAPI<ArrayFieldAction> | FormAPI | ObjectFieldAPI<ObjectFieldAction>
 > = createContext({} as any);

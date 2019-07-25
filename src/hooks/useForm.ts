@@ -1,7 +1,7 @@
 import { SyntheticEvent, useCallback, Dispatch } from 'react';
 import * as yup from 'yup';
 import { FormContext, FormFieldContext } from './formContext';
-import useObjectField, { Field } from './useObjectField';
+import { useObjectField, ObjectFieldAPI } from './useObjectField';
 import { formReducer, FormActionEnum, FormAction, FormState } from './formReducer';
 import { useMountedTracker } from './useMountedTracker';
 
@@ -16,7 +16,7 @@ interface IFormComponents {
   FormProvider: (typeof FormContext)['Provider'];
 }
 
-export type Form = Field<FormAction> & FormState & IFormAPI & IFormComponents;
+export type FormAPI = ObjectFieldAPI<FormAction> & FormState & IFormAPI & IFormComponents;
 
 const defaultValidator = yup.object();
 const defaultInitialValue = {};
@@ -27,7 +27,7 @@ export function useForm(
   validator: yup.Schema<any> = defaultValidator,
   validateOnChange: boolean = false,
   enableReinitialize: boolean = false,
-): Form {
+): FormAPI {
   const mounted = useMountedTracker();
 
   const validate = useCallback(

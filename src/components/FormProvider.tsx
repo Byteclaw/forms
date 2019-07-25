@@ -1,8 +1,8 @@
 import { ReactElement, ReactNode } from 'react';
-import { useConnectedForm, Form } from '../hooks/useConnectedForm';
+import { useConnectedForm, FormAPI } from '../hooks/useConnectedForm';
 
 interface IProps {
-  children: (form: Form) => ReactNode;
+  children: (form: FormAPI) => ReactNode;
 }
 
 export function FormProvider({ children }: IProps) {

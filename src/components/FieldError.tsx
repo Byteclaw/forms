@@ -1,11 +1,9 @@
 import { ComponentType, createElement, ReactElement, ReactNode } from 'react';
-import { useConnectedField, IField } from '../hooks/useConnectedField';
-
-export { IField };
+import { useConnectedField, IFieldReadOnly } from '../hooks/useConnectedField';
 
 interface IProps {
   as?: null | string | ComponentType<any>;
-  children?: (state: IField) => ReactNode;
+  children?: (state: IFieldReadOnly) => ReactNode;
   name: number | string;
 }
 

@@ -1,33 +1,33 @@
-import { useArrayField, Field as ArrayField } from './useArrayField';
-import useField, { IField as ScalarField, IFieldSettings } from './useField';
-import useObjectField, { Field as ObjectField } from './useObjectField';
-import { Form } from './useForm';
+import { useArrayField, ArrayFieldAPI } from './useArrayField';
+import { useField, IField as ScalarField, IFieldSettings } from './useField';
+import { useObjectField, ObjectFieldAPI } from './useObjectField';
+import { FormAPI as Form } from './useForm';
 
 import { ArrayFieldAction } from './arrayFieldReducer';
 import { ObjectFieldAction } from './objectFieldReducer';
 
 export function connectToParentField(
   name: string | number,
-  parentField: ArrayField<ArrayFieldAction> | ObjectField<ObjectFieldAction> | Form,
+  parentField: ArrayFieldAPI<ArrayFieldAction> | ObjectFieldAPI<ObjectFieldAction> | Form,
   fieldHook: typeof useArrayField,
   settings?: IFieldSettings,
-): ArrayField<ArrayFieldAction>;
+): ArrayFieldAPI<ArrayFieldAction>;
 export function connectToParentField(
   name: string | number,
-  parentField: ArrayField<ArrayFieldAction> | ObjectField<ObjectFieldAction> | Form,
+  parentField: ArrayFieldAPI<ArrayFieldAction> | ObjectFieldAPI<ObjectFieldAction> | Form,
   fieldHook: typeof useObjectField,
   settings?: IFieldSettings,
-): ObjectField<ObjectFieldAction>;
+): ObjectFieldAPI<ObjectFieldAction>;
 export function connectToParentField(
   name: string | number,
-  parentField: ArrayField<ArrayFieldAction> | ObjectField<ObjectFieldAction> | Form,
+  parentField: ArrayFieldAPI<ArrayFieldAction> | ObjectFieldAPI<ObjectFieldAction> | Form,
   fieldHook: typeof useField,
   settings?: IFieldSettings,
 ): ScalarField;
 
 export function connectToParentField<R>(
   name: string | number,
-  parentField: ArrayField<ArrayFieldAction> | ObjectField<ObjectFieldAction>,
+  parentField: ArrayFieldAPI<ArrayFieldAction> | ObjectFieldAPI<ObjectFieldAction>,
   fieldHook: (currentValue?: any, initialValue?: any, errors?: any, settings?: IFieldSettings) => R,
   settings?: IFieldSettings,
 ): R {
