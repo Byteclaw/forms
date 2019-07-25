@@ -2,10 +2,10 @@ import { act, fireEvent, render } from '@testing-library/react';
 // @ts-ignore
 import React, { ConcurrentMode, unstable_ConcurrentMode } from 'react';
 import * as yup from 'yup';
-import Field from '../../components/Field';
-import FieldError from '../../components/FieldError';
-import ObjectField from '../../components/ObjectField';
-import useForm from '../useForm';
+import { Field } from '../../components/Field';
+import { FieldError } from '../../components/FieldError';
+import { ObjectField } from '../../components/ObjectField';
+import { useForm } from '../useForm';
 
 const Concurrent = unstable_ConcurrentMode || ConcurrentMode;
 
