@@ -4,7 +4,7 @@ import React, { unstable_ConcurrentMode, ConcurrentMode, Fragment } from 'react'
 import * as yup from 'yup';
 import { ArrayField } from '../ArrayField';
 import { Field } from '../Field';
-import { FieldError, IField } from '../FieldError';
+import { FieldError, IFieldReadOnly } from '../FieldError';
 import { Form } from '../Form';
 import { FormProvider } from '../FormProvider';
 import { ObjectField } from '../ObjectField';
@@ -91,7 +91,7 @@ describe.each([['SyncMode', 'div'], ['ConcurrentMode', Concurrent]])(
 
       it('works correctly with component', () => {
         const onSubmit = () => Promise.resolve();
-        const ErrSpan = ({ dirty, error, focused, touched, valid, ...rest }: IField) => (
+        const ErrSpan = ({ dirty, error, focused, touched, valid, ...rest }: IFieldReadOnly) => (
           <span {...rest}>{error || ''}</span>
         );
         const validator: any = {
@@ -133,7 +133,7 @@ describe.each([['SyncMode', 'div'], ['ConcurrentMode', Concurrent]])(
     describe('Complex Form', () => {
       it('works correctly', () => {
         const onSubmitMock = jest.fn();
-        const ErrSpan = ({ dirty, error, focused, touched, valid, ...rest }: IField) => (
+        const ErrSpan = ({ dirty, error, focused, touched, valid, ...rest }: IFieldReadOnly) => (
           <span {...rest}>{JSON.stringify(error)}</span>
         );
         const validator: any = {
