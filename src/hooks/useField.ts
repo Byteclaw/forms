@@ -1,8 +1,7 @@
-import { useCallback, useMemo, useReducer, useRef, Dispatch, Reducer } from 'react';
-import useConnectedForm from './useConnectedForm';
+import { useCallback, useReducer, useRef, Dispatch, Reducer } from 'react';
+import { useConnectedForm } from './useConnectedForm';
 import { useDebouncedCallback } from './useDebouncedCallback';
 import { fieldReducer, FieldActionType, FieldAction, FieldState } from './fieldReducer';
-import { useMountedTracker } from './useMountedTracker';
 
 export interface IFieldState {
   dirty: Set<string | number>;
@@ -66,10 +65,7 @@ export interface IFieldSettings<
 
 const noop = () => undefined;
 
-export default function useField<
-  TFieldState extends FieldState = FieldState,
-  TFieldActions = FieldAction
->(
+export function useField<TFieldState extends FieldState = FieldState, TFieldActions = FieldAction>(
   currentValue: any,
   initialValue: any,
   error: string | { [key: string]: string } | undefined,
@@ -108,15 +104,15 @@ export default function useField<
   const isFocused = useCallback((name = '') => state.focused.has(name), [state.focused]);
   const isTouched = useCallback((name = '') => state.touched.has(name), [state.touched]);
   const setDirty = useCallback(
-    (isDirty: boolean, name: string = '') =>
-      dispatch({ type: FieldActionType.SET_DIRTY, isDirty, name }),
+    (dirty: boolean, name: string = '') =>
+      dispatch({ type: FieldActionType.SET_DIRTY, isDirty: dirty, name }),
     [dispatch],
   );
   const setFocused = useCallback(
-    (isFocused: boolean, name: string = '') =>
+    (focused: boolean, name: string = '') =>
       dispatch({
         type: FieldActionType.SET_FOCUS,
-        isFocused,
+        isFocused: focused,
         name,
       }),
     [dispatch],

@@ -3,6 +3,6 @@ import { FormContext } from './formContext';
 
 export { Form } from './useForm';
 
-export default function useConnectedForm() {
+export function useConnectedForm() {
   return useContext(FormContext);
 }

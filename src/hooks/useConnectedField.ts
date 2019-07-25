@@ -8,7 +8,7 @@ export interface IField {
   valid: boolean;
 }
 
-export default function useConnectedField(name: string | number = ''): IField {
+export function useConnectedField(name: string | number = ''): IField {
   const field = useParentField();
   const error = field.getError(name);
 

@@ -1,32 +1,31 @@
-import { Field as ArrayField } from './useArrayField';
+import { useArrayField, Field as ArrayField } from './useArrayField';
 import useField, { IField as ScalarField, IFieldSettings } from './useField';
-import { Field as ObjectField } from './useObjectField';
+import useObjectField, { Field as ObjectField } from './useObjectField';
 import { Form } from './useForm';
-import useArrayField from './useArrayField';
-import useObjectField from './useObjectField';
+
 import { ArrayFieldAction } from './arrayFieldReducer';
 import { ObjectFieldAction } from './objectFieldReducer';
 
-export default function connectToParentField(
+export function connectToParentField(
   name: string | number,
   parentField: ArrayField<ArrayFieldAction> | ObjectField<ObjectFieldAction> | Form,
   fieldHook: typeof useArrayField,
   settings?: IFieldSettings,
 ): ArrayField<ArrayFieldAction>;
-export default function connectToParentField(
+export function connectToParentField(
   name: string | number,
   parentField: ArrayField<ArrayFieldAction> | ObjectField<ObjectFieldAction> | Form,
   fieldHook: typeof useObjectField,
   settings?: IFieldSettings,
 ): ObjectField<ObjectFieldAction>;
-export default function connectToParentField(
+export function connectToParentField(
   name: string | number,
   parentField: ArrayField<ArrayFieldAction> | ObjectField<ObjectFieldAction> | Form,
   fieldHook: typeof useField,
   settings?: IFieldSettings,
 ): ScalarField;
 
-export default function connectToParentField<R>(
+export function connectToParentField<R>(
   name: string | number,
   parentField: ArrayField<ArrayFieldAction> | ObjectField<ObjectFieldAction>,
   fieldHook: (currentValue?: any, initialValue?: any, errors?: any, settings?: IFieldSettings) => R,

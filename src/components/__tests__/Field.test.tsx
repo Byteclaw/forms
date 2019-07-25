@@ -1,7 +1,7 @@
 import { render } from '@testing-library/react';
 import React from 'react';
-import Field from '../Field';
-import Form from '../Form';
+import { Field } from '../Field';
+import { Form } from '../Form';
 
 describe('Field component', () => {
   it('forwards ref', async () => {

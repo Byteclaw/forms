@@ -1,5 +1,5 @@
 import { ComponentType, createElement, ReactElement, ReactNode } from 'react';
-import useConnectedField, { IField } from '../hooks/useConnectedField';
+import { useConnectedField, IField } from '../hooks/useConnectedField';
 
 export { IField };
 
@@ -22,5 +22,3 @@ export function FieldError({ as = null, children, name, ...rest }: IProps) {
 
   return null;
 }
-
-export default FieldError;

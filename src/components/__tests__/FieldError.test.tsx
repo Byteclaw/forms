@@ -2,12 +2,12 @@ import { act, fireEvent, render } from '@testing-library/react';
 // @ts-ignore
 import React, { unstable_ConcurrentMode, ConcurrentMode, Fragment } from 'react';
 import * as yup from 'yup';
-import ArrayField from '../ArrayField';
-import Field from '../Field';
-import FieldError, { IField } from '../FieldError';
-import Form from '../Form';
-import FormProvider from '../FormProvider';
-import ObjectField from '../ObjectField';
+import { ArrayField } from '../ArrayField';
+import { Field } from '../Field';
+import { FieldError, IField } from '../FieldError';
+import { Form } from '../Form';
+import { FormProvider } from '../FormProvider';
+import { ObjectField } from '../ObjectField';
 
 const Concurrent = unstable_ConcurrentMode || ConcurrentMode;
 
@@ -140,7 +140,7 @@ describe.each([['SyncMode', 'div'], ['ConcurrentMode', Concurrent]])(
           validate(...args: any[]) {
             return new Promise((res, rej) => {
               try {
-                const validator = yup
+                const validationSchema = yup
                   .object()
                   .shape({
                     arr: yup
@@ -164,7 +164,7 @@ describe.each([['SyncMode', 'div'], ['ConcurrentMode', Concurrent]])(
                   .required();
 
                 // @ts-ignore
-                res(validator.validateSync(...args));
+                res(validationSchema.validateSync(...args));
               } catch (e) {
                 rej(e);
               }

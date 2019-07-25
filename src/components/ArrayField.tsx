@@ -1,7 +1,7 @@
 import React, { ReactNode, ReactNodeArray } from 'react';
-import connectToParentField from '../hooks/connectToParentField';
-import useArrayField, { Field } from '../hooks/useArrayField';
-import useParentField from '../hooks/useParentField';
+import { connectToParentField } from '../hooks/connectToParentField';
+import { useArrayField, Field } from '../hooks/useArrayField';
+import { useParentField } from '../hooks/useParentField';
 import { ArrayFieldAction } from '../hooks/arrayFieldReducer';
 
 export type ArrayFieldAPI = Field<ArrayFieldAction>;
@@ -26,5 +26,3 @@ export function ArrayField({ children, debounceDelay, name }: IProps) {
     </field.Provider>
   );
 }
-
-export default ArrayField;

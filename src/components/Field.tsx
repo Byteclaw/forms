@@ -8,9 +8,9 @@ import {
   ReactNodeArray,
   SyntheticEvent,
 } from 'react';
-import connectToParentField from '../hooks/connectToParentField';
-import useField, { IField as FieldAPI } from '../hooks/useField';
-import useParentField from '../hooks/useParentField';
+import { connectToParentField } from '../hooks/connectToParentField';
+import { useField, IField as FieldAPI } from '../hooks/useField';
+import { useParentField } from '../hooks/useParentField';
 
 export type FieldRenderFn = (field: FieldAPI) => ReactNode;
 
@@ -68,5 +68,3 @@ export const Field: FC<IProps> = forwardRef(
 );
 
 Field.displayName = 'Field';
-
-export default Field;

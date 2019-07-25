@@ -21,7 +21,7 @@ export type Form = Field<FormAction> & FormState & IFormAPI & IFormComponents;
 const defaultValidator = yup.object();
 const defaultInitialValue = {};
 
-export default function useForm(
+export function useForm(
   initialValue: undefined | { [key: string]: any } = defaultInitialValue,
   onSubmit: (values: any) => Promise<any>,
   validator: yup.Schema<any> = defaultValidator,
@@ -87,7 +87,7 @@ export default function useForm(
       e.preventDefault();
 
       if (field.changing || field.submitting || field.validating) {
-        return;
+        return Promise.resolve();
       }
 
       // validate

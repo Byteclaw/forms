@@ -1,23 +1,21 @@
 {
-  "extends": ["plugin:react/recommended", "plugin:prettier/recommended"],
+  "extends": ["airbnb-typescript", "prettier", "prettier/@typescript-eslint", "prettier/react"],
   "parser": "@typescript-eslint/parser",
   "env": {
     "es6": true,
     "jest": true,
     "node": true,
-    "browser": false
+    "browser": true
   },
-  "plugins": ["react-hooks"],
+  "plugins": ["prettier", "react-hooks"],
   "rules": {
+    "@typescript-eslint/camelcase": "off",
+    "import/export": "off",
+    "import/no-cycle": "warn",
+    "import/prefer-default-export": "off",
     "react-hooks/rules-of-hooks": "error",
-    "no-console": "off"
-  },
-  "parserOptions": {
-    "sourceType": "module"
-  },
-  "settings": {
-    "react": {
-      "version": "detect"
-    }
+    "no-console": "off",
+    "prefer-template": "off",
+    "prettier/prettier": "error"
   }
 }

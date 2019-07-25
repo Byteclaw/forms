@@ -1,7 +1,7 @@
 import React, { ReactNode, ReactNodeArray } from 'react';
-import connectToParentField from '../hooks/connectToParentField';
-import useObjectField, { Field } from '../hooks/useObjectField';
-import useParentField from '../hooks/useParentField';
+import { connectToParentField } from '../hooks/connectToParentField';
+import { useObjectField, Field } from '../hooks/useObjectField';
+import { useParentField } from '../hooks/useParentField';
 import { ObjectFieldAction } from '../hooks/objectFieldReducer';
 
 export type ObjectFieldAPI = Field<ObjectFieldAction>;
@@ -26,5 +26,3 @@ export function ObjectField({ children, debounceDelay, name }: IProps) {
     </field.Provider>
   );
 }
-
-export default ObjectField;

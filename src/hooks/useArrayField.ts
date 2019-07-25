@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { FormFieldContext } from './formContext';
-import useField, { IField as IScalarField, IFieldSettings } from './useField';
+import { IField as IScalarField, IFieldSettings, useField } from './useField';
 import {
   ArrayFieldActionEnum,
   arrayFieldReducer,
@@ -36,7 +36,7 @@ interface IFieldComponents {
 
 const defaultInitialState: any[] = [];
 
-export default function useArrayField<
+export function useArrayField<
   TFieldState extends FieldState<any[]> = FieldState<any[]>,
   TFieldActions extends ArrayFieldAction = ArrayFieldAction
 >(

@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { FormFieldContext } from './formContext';
-import useField, { IField as IScalarField, IFieldSettings } from './useField';
+import { IField as IScalarField, IFieldSettings, useField } from './useField';
 import {
   objectFieldReducer,
   ObjectFieldActionEnum,
@@ -27,7 +27,7 @@ interface IFieldComponents {
 
 const defaultInitialValue = {};
 
-export default function useObjectField<
+export function useObjectField<
   TFieldState extends FieldState<{ [key: string]: any }> = FieldState<{ [key: string]: any }>,
   TFieldActions = ObjectFieldAction
 >(

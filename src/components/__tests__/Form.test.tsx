@@ -2,10 +2,10 @@ import { act, fireEvent, render } from '@testing-library/react';
 // @ts-ignore
 import React, { unstable_ConcurrentMode, ConcurrentMode, Fragment } from 'react';
 import * as yup from 'yup';
-import Field from '../Field';
-import FieldError from '../FieldError';
-import Form from '../Form';
-import FormProvider from '../FormProvider';
+import { Field } from '../Field';
+import { FieldError } from '../FieldError';
+import { Form } from '../Form';
+import { FormProvider } from '../FormProvider';
 
 const Concurrent = unstable_ConcurrentMode || ConcurrentMode;
 
@@ -117,7 +117,7 @@ describe.each([['SyncMode', 'div'], ['ConcurrentMode', Concurrent]])(
         };
         const prepareApp = ({
           enableReinitialize = true,
-          initialValues,
+          initialValues: defValues,
         }: {
           enableReinitialize?: boolean;
           initialValues: any;
@@ -126,7 +126,7 @@ describe.each([['SyncMode', 'div'], ['ConcurrentMode', Concurrent]])(
             <Form
               data-testid="form"
               enableReinitialize={enableReinitialize}
-              initialValues={initialValues}
+              initialValues={defValues}
               onSubmit={onSubmit}
               validationSchema={validator}
             >

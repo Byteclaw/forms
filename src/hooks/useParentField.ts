@@ -6,7 +6,7 @@ import { Form } from './useForm';
 import { ArrayFieldAction } from './arrayFieldReducer';
 import { ObjectFieldAction } from './objectFieldReducer';
 
-export default function useParentField():
+export function useParentField():
   | ArrayField<ArrayFieldAction>
   | Form
   | ObjectField<ObjectFieldAction> {
