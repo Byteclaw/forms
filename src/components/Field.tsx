@@ -1,38 +1,56 @@
 import {
   FC,
+  ComponentProps,
   ComponentType,
   createElement,
   forwardRef,
   ReactElement,
   ReactNode,
-  ReactNodeArray,
   SyntheticEvent,
 } from 'react';
 import { connectToParentField } from '../hooks/connectToParentField';
 import { useField, IField as FieldAPI } from '../hooks/useField';
 import { useParentField } from '../hooks/useParentField';
 
-export type FieldRenderFn = (field: FieldAPI) => ReactNode;
+export type FieldRenderFn<TValue> = (field: FieldAPI<TValue>) => ReactElement | null;
 
 export { FieldAPI };
 
-interface IProps {
-  as?: string | ComponentType<any>;
+interface IProps<TValue> {
   debounceDelay?: number;
-  children?: void | ReactNode | ReactNodeArray | FieldRenderFn;
+  children?: void | ReactNode | FieldRenderFn<TValue>;
   name: string | number;
-  [key: string]: any;
 }
 
-export const Field: FC<IProps> = forwardRef(
-  ({ as = 'input', children = null, debounceDelay = 300, name, ...rest }: IProps, ref) => {
+interface FieldComponent {
+  <TValue = any>(props: JSX.IntrinsicElements['input'] & IProps<TValue>): ReactElement | null;
+  <TValue = any, TAs extends keyof JSX.IntrinsicElements = any>(
+    props: { as: TAs } & JSX.IntrinsicElements[TAs] & IProps<TValue>,
+  ): ReactElement | null;
+  <TValue = any, TAs extends ComponentType<any> = FC<{}>>(
+    props: { as: TAs } & ComponentProps<TAs> & IProps<TValue>,
+  ): ReactElement | null;
+  displayName?: string;
+}
+
+export const Field: FieldComponent = forwardRef(
+  (
+    {
+      as = 'input',
+      children = null,
+      debounceDelay = 300,
+      name,
+      ...rest
+    }: IProps<any> & { as: any },
+    ref,
+  ) => {
     const parentField = useParentField();
     const field = connectToParentField(name, parentField, useField, {
       debounceDelay,
     });
 
     if (typeof children === 'function') {
-      return (children as FieldRenderFn)(field) as ReactElement<any> | null;
+      return (children as FieldRenderFn<any>)(field) as ReactElement<any> | null;
     }
 
     function onBlur() {
@@ -65,6 +83,6 @@ export const Field: FC<IProps> = forwardRef(
       value: field.value || '',
     });
   },
-);
+) as any;
 
 Field.displayName = 'Field';

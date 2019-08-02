@@ -16,7 +16,10 @@ interface IFormComponents {
   FormProvider: (typeof FormContext)['Provider'];
 }
 
-export type FormAPI = ObjectFieldAPI<FormAction> & FormState & IFormAPI & IFormComponents;
+export type FormAPI<TValue extends { [key: string]: any }> = ObjectFieldAPI<TValue, FormAction> &
+  FormState &
+  IFormAPI &
+  IFormComponents;
 
 const defaultValidator = yup.object();
 const defaultInitialValue = {};
@@ -27,7 +30,7 @@ export function useForm(
   validator: yup.Schema<any> = defaultValidator,
   validateOnChange: boolean = false,
   enableReinitialize: boolean = false,
-): FormAPI {
+): FormAPI<any> {
   const mounted = useMountedTracker();
 
   const validate = useCallback(

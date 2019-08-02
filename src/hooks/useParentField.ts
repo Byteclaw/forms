@@ -7,8 +7,8 @@ import { ArrayFieldAction } from './arrayFieldReducer';
 import { ObjectFieldAction } from './objectFieldReducer';
 
 export function useParentField():
-  | ArrayFieldAPI<ArrayFieldAction>
-  | FormAPI
-  | ObjectFieldAPI<ObjectFieldAction> {
+  | ArrayFieldAPI<any[], ArrayFieldAction>
+  | FormAPI<any>
+  | ObjectFieldAPI<any, ObjectFieldAction> {
   return useContext(FormFieldContext);
 }

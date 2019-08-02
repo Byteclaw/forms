@@ -13,7 +13,10 @@ type GetErrorFn = (field: number | string) => void | string;
 type GetFieldFn = (field: number | string) => any;
 type SetFieldFn = (field: number | string, value: any) => void;
 
-export type ObjectFieldAPI<TActions> = IScalarField<TActions> & {
+export type ObjectFieldAPI<TValue extends { [key: string]: any }, TActions> = IScalarField<
+  TValue,
+  TActions
+> & {
   kind: 'OBJECT';
   getError: GetErrorFn;
   getField: GetFieldFn;
@@ -35,7 +38,7 @@ export function useObjectField<
   initialValue: { [key: string]: any } = defaultInitialValue,
   errors?: undefined | { [key: string]: string } | string,
   settings?: IFieldSettings<TFieldState, TFieldActions>,
-): TFieldState & ObjectFieldAPI<TFieldActions> {
+): TFieldState & ObjectFieldAPI<any, TFieldActions> {
   const field = useField<TFieldState, TFieldActions>(currentValue, initialValue, errors, {
     enableReinitialize: false,
     reducer: objectFieldReducer as any,

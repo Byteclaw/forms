@@ -24,14 +24,14 @@ type SetDirtyFn = (dirty: boolean, childName?: string | number) => void;
 type SetFocusFn = (focused: boolean, childName?: string | number) => void;
 type SetValueFn = (value: ((currentState: IFieldState) => any) | any) => void;
 
-export interface IField<TActions = FieldAction, TValue = any> {
+export interface IField<TValue = any, TActions = FieldAction> {
   changing: boolean;
   dirty: boolean;
   dispatch: Dispatch<TActions>;
   errors: { [key: string]: string } | string | undefined;
   enableReinitialize: boolean;
   focused: boolean;
-  initialValue: any;
+  initialValue: TValue | undefined;
   isDirty: IsDirtyFn;
   isFocused: IsFocusedFn;
   isTouched: IsTouchedFn;
@@ -40,7 +40,7 @@ export interface IField<TActions = FieldAction, TValue = any> {
   setFocused: SetFocusFn;
   setValue: SetValueFn;
   touched: boolean;
-  value: TValue;
+  value: TValue | undefined;
   valid: boolean;
 }
 
@@ -80,7 +80,7 @@ export function useField<TFieldState extends FieldState = FieldState, TFieldActi
     parentInitialValue,
     reducer,
   }: IFieldSettings<TFieldState, TFieldActions> = {},
-): IField<TFieldActions> {
+): IField<any, TFieldActions> {
   const form = useConnectedForm();
   const stateTracker = useRef({
     previousParentInitialValue: parentInitialValue,

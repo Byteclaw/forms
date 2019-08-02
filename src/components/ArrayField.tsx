@@ -1,20 +1,24 @@
-import React, { ReactNode, ReactNodeArray } from 'react';
+import React, { ReactNode } from 'react';
 import { connectToParentField } from '../hooks/connectToParentField';
 import { useArrayField, ArrayFieldAPI } from '../hooks/useArrayField';
 import { useParentField } from '../hooks/useParentField';
 import { ArrayFieldAction } from '../hooks/arrayFieldReducer';
 
-// export type ArrayFieldAPI = Field<ArrayFieldAction>;
+export type ArrayFieldRenderer<TValue extends any[]> = (
+  field: ArrayFieldAPI<TValue, ArrayFieldAction>,
+) => ReactNode;
 
-export type ArrayFieldRenderer = (field: ArrayFieldAPI<ArrayFieldAction>) => ReactNode;
-
-interface IProps {
-  children: ArrayFieldRenderer | ReactNode | ReactNodeArray;
+interface IProps<TValue extends any[]> {
+  children: ArrayFieldRenderer<TValue> | ReactNode;
   debounceDelay?: number;
   name: number | string;
 }
 
-export function ArrayField({ children, debounceDelay, name }: IProps) {
+export function ArrayField<TValue extends any[] = any[]>({
+  children,
+  debounceDelay,
+  name,
+}: IProps<TValue>) {
   const parentField = useParentField();
   const field = connectToParentField(name, parentField, useArrayField, {
     debounceDelay,
@@ -22,7 +26,7 @@ export function ArrayField({ children, debounceDelay, name }: IProps) {
 
   return (
     <field.Provider value={field}>
-      {typeof children === 'function' ? (children as ArrayFieldRenderer)(field) : children}
+      {typeof children === 'function' ? (children as ArrayFieldRenderer<any[]>)(field) : children}
     </field.Provider>
   );
 }

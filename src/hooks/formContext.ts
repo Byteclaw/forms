@@ -5,7 +5,7 @@ import { ObjectFieldAPI } from './useObjectField';
 import { ArrayFieldAction } from './arrayFieldReducer';
 import { ObjectFieldAction } from './objectFieldReducer';
 
-export const FormContext: Context<FormAPI> = createContext({} as any);
+export const FormContext: Context<FormAPI<any>> = createContext({} as any);
 export const FormFieldContext: Context<
-  ArrayFieldAPI<ArrayFieldAction> | FormAPI | ObjectFieldAPI<ObjectFieldAction>
+  ArrayFieldAPI<any[], ArrayFieldAction> | FormAPI<any> | ObjectFieldAPI<any, ObjectFieldAction>
 > = createContext({} as any);

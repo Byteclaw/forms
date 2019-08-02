@@ -8,26 +8,35 @@ import { ObjectFieldAction } from './objectFieldReducer';
 
 export function connectToParentField(
   name: string | number,
-  parentField: ArrayFieldAPI<ArrayFieldAction> | ObjectFieldAPI<ObjectFieldAction> | Form,
+  parentField:
+    | ArrayFieldAPI<any[], ArrayFieldAction>
+    | ObjectFieldAPI<any, ObjectFieldAction>
+    | Form<any>,
   fieldHook: typeof useArrayField,
   settings?: IFieldSettings,
-): ArrayFieldAPI<ArrayFieldAction>;
+): ArrayFieldAPI<any[], ArrayFieldAction>;
 export function connectToParentField(
   name: string | number,
-  parentField: ArrayFieldAPI<ArrayFieldAction> | ObjectFieldAPI<ObjectFieldAction> | Form,
+  parentField:
+    | ArrayFieldAPI<any[], ArrayFieldAction>
+    | ObjectFieldAPI<any, ObjectFieldAction>
+    | Form<any>,
   fieldHook: typeof useObjectField,
   settings?: IFieldSettings,
-): ObjectFieldAPI<ObjectFieldAction>;
+): ObjectFieldAPI<any, ObjectFieldAction>;
 export function connectToParentField(
   name: string | number,
-  parentField: ArrayFieldAPI<ArrayFieldAction> | ObjectFieldAPI<ObjectFieldAction> | Form,
+  parentField:
+    | ArrayFieldAPI<any[], ArrayFieldAction>
+    | ObjectFieldAPI<any, ObjectFieldAction>
+    | Form<any>,
   fieldHook: typeof useField,
   settings?: IFieldSettings,
 ): ScalarField;
 
 export function connectToParentField<R>(
   name: string | number,
-  parentField: ArrayFieldAPI<ArrayFieldAction> | ObjectFieldAPI<ObjectFieldAction>,
+  parentField: ArrayFieldAPI<any[], ArrayFieldAction> | ObjectFieldAPI<any, ObjectFieldAction>,
   fieldHook: (currentValue?: any, initialValue?: any, errors?: any, settings?: IFieldSettings) => R,
   settings?: IFieldSettings,
 ): R {
