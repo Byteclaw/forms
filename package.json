@@ -29,9 +29,9 @@
     }
   ],
   "unpkg": "dist/index.umd.js",
-  "main": "dist/index.cjs.js",
-  "jsnext:main": "dist/index.js",
-  "module": "dist/index.js",
+  "main": "dist/index.js",
+  "jsnext:main": "dist/index.modern.mjs",
+  "module": "dist/index.modern.mjs",
   "types": "dist/index.d.js",
   "files": [
     "dist",
@@ -39,7 +39,8 @@
     "!__tests__"
   ],
   "dependencies": {
-    "@types/react": "^16.8.23"
+    "@types/react": "^16.8.23",
+    "@types/yup": "^0.26.22"
   },
   "sideEffects": false,
   "devDependencies": {
@@ -51,7 +52,6 @@
     "@testing-library/react": "^8.0.6",
     "@types/jest": "^24.0.15",
     "@types/react": "^16.8.23",
-    "@types/yup": "^0.26.22",
     "@typescript-eslint/parser": "^1.13.0",
     "@typescript-eslint/eslint-plugin": "^1.13.0",
     "all-contributors-cli": "^6.8.1",
@@ -73,6 +73,7 @@
     "release-it": "^12.3.4",
     "rimraf": "^2.6.3",
     "typescript": "^3.5.3",
+    "use-debounce": "^2.2.0",
     "yup": "^0.27.0"
   },
   "peerDependencies": {

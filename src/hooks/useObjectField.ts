@@ -1,86 +1,57 @@
-import { useCallback } from 'react';
-import { FormFieldContext } from './formContext';
-import { IField as IScalarField, IFieldSettings, useField } from './useField';
+import { useCallback, useReducer, useRef, Dispatch, Reducer } from 'react';
 import {
+  initObjectFieldState,
   objectFieldReducer,
-  ObjectFieldActionEnum,
   ObjectFieldAction,
-  SetFieldAction,
-} from './objectFieldReducer';
-import { FieldState } from './fieldReducer';
+  ObjectFieldState,
+} from '../reducers';
+import { useFormState } from './useFormState';
+import { useParentField } from './useParentField';
+import { useInitialValue } from './useInitialValue';
+import { useError } from './useError';
 
-type GetErrorFn = (field: number | string) => void | string;
-type GetFieldFn = (field: number | string) => any;
-type SetFieldFn = (field: number | string, value: any) => void;
+export function useObjectField<TValue extends { [key: string]: any } = { [key: string]: any }>(
+  name: string,
+): [ObjectFieldState<TValue>, Dispatch<ObjectFieldAction<TValue>>] {
+  const [formState] = useFormState();
+  const [parentFieldState, parentFieldDispatch] = useParentField();
+  const initialValue = useInitialValue<TValue>(name, parentFieldState);
+  const error = useError(name, parentFieldState);
+  const [fieldState, fieldDispatch] = useReducer(
+    objectFieldReducer as Reducer<ObjectFieldState<TValue>, ObjectFieldAction<TValue>>,
+    initialValue,
+    initObjectFieldState,
+  );
+  const previousState = useRef(fieldState);
 
-export type ObjectFieldAPI<TValue extends { [key: string]: any }, TActions> = IScalarField<
-  TValue,
-  TActions
-> & {
-  kind: 'OBJECT';
-  getError: GetErrorFn;
-  getField: GetFieldFn;
-  getInitialField: GetFieldFn;
-  setField: SetFieldFn;
-} & IFieldComponents;
-
-interface IFieldComponents {
-  Provider: typeof FormFieldContext['Provider'];
-}
-
-const defaultInitialValue = {};
-
-export function useObjectField<
-  TFieldState extends FieldState<{ [key: string]: any }> = FieldState<{ [key: string]: any }>,
-  TFieldActions = ObjectFieldAction
->(
-  currentValue?: { [key: string]: any },
-  initialValue: { [key: string]: any } = defaultInitialValue,
-  errors?: undefined | { [key: string]: string } | string,
-  settings?: IFieldSettings<TFieldState, TFieldActions>,
-): TFieldState & ObjectFieldAPI<any, TFieldActions> {
-  const field = useField<TFieldState, TFieldActions>(currentValue, initialValue, errors, {
-    enableReinitialize: false,
-    reducer: objectFieldReducer as any,
-    ...settings,
-  });
-  const getError = useCallback(
-    fieldName => {
-      if (field.errors == null || typeof field.errors === 'string') {
-        return undefined;
+  const dispatch: Dispatch<ObjectFieldAction<TValue>> = useCallback(
+    action => {
+      if (formState.status === 'IDLE' || formState.status === 'CHANGING') {
+        fieldDispatch(action);
       }
-
-      return field.errors[fieldName];
     },
-    [field.errors],
-  );
-  const getField = useCallback(fieldName => (field.value ? field.value[fieldName] : undefined), [
-    field.value,
-  ]);
-  const getInitialField = useCallback(
-    fieldName => (field.initialValue ? field.initialValue[fieldName] : undefined),
-    [field.initialValue],
-  );
-  const setField = useCallback(
-    (fieldName: string, value: any) => {
-      field.setChanging(true);
-      field.dispatch(({
-        type: ObjectFieldActionEnum.SET_FIELD,
-        field: fieldName,
-        name: '',
-        value,
-      } as SetFieldAction) as any);
-    },
-    [field.setChanging, field.dispatch],
+    [formState.status],
   );
 
-  return {
-    ...(field as any),
-    Provider: FormFieldContext.Provider,
-    getError,
-    getField,
-    getInitialField,
-    kind: 'OBJECT',
-    setField,
-  };
+  // if initial value changes, set it
+  if (initialValue !== fieldState.initialValue) {
+    fieldDispatch({ type: 'SET_INITIAL_VALUE', value: initialValue as TValue });
+  }
+
+  if (
+    (formState.status === 'IDLE' || formState.status === 'CHANGING') &&
+    previousState.current.value !== fieldState.value &&
+    fieldState.value !== fieldState.initialValue
+  ) {
+    previousState.current = fieldState;
+    // propagate change to parent only if is changed and is different than initial value
+    parentFieldDispatch({ type: 'CHANGE_FIELD', name, value: fieldState.value });
+  }
+
+  // if error is changed, propagate down
+  if (error !== fieldState.error) {
+    fieldDispatch({ type: 'SET_ERROR', error });
+  }
+
+  return [fieldState, dispatch];
 }

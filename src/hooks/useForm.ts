@@ -1,132 +1,107 @@
-import { SyntheticEvent, useCallback, Dispatch } from 'react';
-import * as yup from 'yup';
-import { FormContext, FormFieldContext } from './formContext';
-import { useObjectField, ObjectFieldAPI } from './useObjectField';
-import { formReducer, FormActionEnum, FormAction, FormState } from './formReducer';
-import { useMountedTracker } from './useMountedTracker';
+import { Dispatch, Reducer, useEffect, useReducer, useRef } from 'react';
+import {
+  FormState,
+  FormAction,
+  formReducer,
+  initFormState,
+  ObjectFieldAction,
+  ObjectFieldState,
+} from '../reducers';
+import { ValidationError } from './ValidationError';
+import { useDebouncedCallback } from './useDebouncedCallback';
 
-type HandleSubmitFn = (e: SyntheticEvent<HTMLFormElement>) => Promise<any> | any;
+export { FormState, FormAction, ObjectFieldState, ObjectFieldAction };
 
-interface IFormAPI {
-  handleSubmit: HandleSubmitFn;
-}
-
-interface IFormComponents {
-  FieldProvider: (typeof FormFieldContext)['Provider'];
-  FormProvider: (typeof FormContext)['Provider'];
-}
-
-export type FormAPI<TValue extends { [key: string]: any }> = ObjectFieldAPI<TValue, FormAction> &
-  FormState &
-  IFormAPI &
-  IFormComponents;
-
-const defaultValidator = yup.object();
-const defaultInitialValue = {};
-
-export function useForm(
-  initialValue: undefined | { [key: string]: any } = defaultInitialValue,
-  onSubmit: (values: any) => Promise<any>,
-  validator: yup.Schema<any> = defaultValidator,
+export function useForm<TValue extends { [key: string]: any } = { [key: string]: any }>(
+  initialValue?: TValue,
+  onSubmit?: (value: TValue) => Promise<void>,
+  onValidate?: (value: TValue) => Promise<void>,
   validateOnChange: boolean = false,
-  enableReinitialize: boolean = false,
-): FormAPI<any> {
-  const mounted = useMountedTracker();
-
-  const validate = useCallback(
-    (value: any, dispatch: Dispatch<FormAction>): Promise<any> => {
-      if (!validator) {
-        return value;
-      }
-
-      dispatch({ type: FormActionEnum.VALIDATION_START });
-
-      return validator.validate(value, { abortEarly: false }).then(
-        val => {
-          dispatch({ type: FormActionEnum.VALIDATION_SUCCESS });
-
-          return val;
-        },
-        e => {
-          dispatch({ type: FormActionEnum.VALIDATION_FAIL, error: e });
-
-          throw e;
-        },
-      );
-    },
-    [validator],
+): [FormState<TValue>, Dispatch<FormAction<TValue>>] {
+  const [state, dispatch] = useReducer(
+    formReducer as Reducer<FormState<TValue>, FormAction<TValue>>,
+    initialValue,
+    initFormState,
   );
-  const onChange = useCallback(
-    (value: any, dispatch: Dispatch<FormAction>): Promise<any> => {
-      if (!validateOnChange) {
-        return value;
-      }
-
-      // catch the error because it is processed
-      return validate(value, dispatch).catch(() => undefined);
-    },
-    [validate, validateOnChange],
+  const [propagateValidateOnChange, cancelValidateOnChange] = useDebouncedCallback(
+    () => dispatch({ type: 'VALIDATE' }),
+    100,
+    [],
   );
-  const field = useObjectField<FormState, FormAction>(undefined, initialValue, undefined, {
-    enableReinitialize,
-    debounceDelay: 0,
-    onChange: onChange as any,
-    initialState: {
-      changing: new Set(),
-      dirty: new Set(),
-      focused: new Set(),
-      initialValue,
-      errors: undefined,
-      submitting: false,
-      touched: new Set(),
-      valid: true,
-      validating: false,
-      value: initialValue,
-    },
-    reducer: formReducer,
-  });
-  const handleSubmit = useCallback(
-    (e: SyntheticEvent<HTMLFormElement>): Promise<void> | void => {
-      e.preventDefault();
+  const previousFormState = useRef(state);
 
-      if (field.changing || field.submitting || field.validating) {
-        return Promise.resolve();
+  // cancel validate on change propagation
+  useEffect(() => {
+    return () => {
+      cancelValidateOnChange();
+    };
+  }, [validateOnChange]);
+
+  if (previousFormState.current !== state) {
+    if (previousFormState.current.status !== state.status) {
+      if (state.status === 'VALIDATING' || state.status === 'VALIDATING_ON_CHANGE') {
+        dispatch({ type: 'SET_ERROR', error: undefined });
+
+        // VALIDATING won't be called if value of form is undefined
+        if (onValidate) {
+          onValidate(state.value!)
+            .then(() => {
+              dispatch({ type: 'VALIDATING_DONE' });
+            })
+            .catch(e => {
+              // process validation error
+              if (e instanceof ValidationError) {
+                dispatch({ type: 'SET_ERROR', error: e.errors });
+              } else if (e instanceof Error) {
+                dispatch({ type: 'SET_ERROR', error: { '': e.message } });
+              } else {
+                dispatch({ type: 'SET_ERROR', error: { '': '' + e } });
+              }
+
+              dispatch({ type: 'VALIDATING_FAILED' });
+            });
+        } else {
+          dispatch({ type: 'VALIDATING_DONE' });
+        }
+      } else if (state.status === 'SUBMITTING') {
+        // SUBMITTING won't be called if value of form is undefined
+        if (onSubmit) {
+          onSubmit(state.value!)
+            .then(() => {
+              dispatch({ type: 'SUBMITTING_DONE' });
+            })
+            .catch(e => {
+              // process validation error
+              if (e instanceof ValidationError) {
+                dispatch({ type: 'SET_ERROR', error: e.errors });
+              } else if (e instanceof Error) {
+                dispatch({ type: 'SET_ERROR', error: { '': e.message } });
+              } else {
+                dispatch({ type: 'SET_ERROR', error: { '': '' + e } });
+              }
+
+              dispatch({ type: 'SUBMITTING_FAILED' });
+            });
+        } else {
+          dispatch({ type: 'SUBMITTING_DONE' });
+        }
       }
+    }
 
-      // validate
-      return validate(field.value, field.dispatch)
-        .then((val: any) => {
-          field.dispatch({ type: FormActionEnum.SUBMIT_START });
+    if (previousFormState.current.value !== state.value && validateOnChange) {
+      propagateValidateOnChange();
+    }
 
-          return onSubmit(val);
-        })
-        .then(() => {
-          // do nothing if form is unmounted
-          if (!mounted.current) {
-            return;
-          }
+    previousFormState.current = state;
+  }
 
-          field.dispatch({ type: FormActionEnum.SUBMIT_SUCCESS });
-        })
-        .catch((err: any) => field.dispatch({ type: FormActionEnum.SUBMIT_FAIL, error: err }));
-    },
-    [
-      onSubmit,
-      field.dispatch,
-      validate,
-      field.changing,
-      field.value,
-      field.submitting,
-      field.validating,
-      mounted,
-    ],
-  );
+  // if form is idle or changing and initial value changed, reset everything
+  if (
+    state.initialValue !== initialValue &&
+    (state.status === 'IDLE' || state.status === 'CHANGING')
+  ) {
+    dispatch({ type: 'SET_INITIAL_VALUE', value: initialValue as TValue });
+  }
 
-  return {
-    ...field,
-    FieldProvider: field.Provider,
-    FormProvider: FormContext.Provider,
-    handleSubmit,
-    valid: field.errors == null,
-  };
+  return [state, dispatch];
 }

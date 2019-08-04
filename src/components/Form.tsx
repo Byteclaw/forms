@@ -1,82 +1,80 @@
-import React, { ComponentProps, ComponentType, FC, ReactElement, ReactNode } from 'react';
-import * as yup from 'yup';
-import { useForm, FormAPI } from '../hooks/useForm';
+import React, {
+  createElement,
+  ComponentProps,
+  FC,
+  FormEventHandler,
+  ReactElement,
+  ReactNode,
+  useCallback,
+  useMemo,
+  ComponentType,
+  Dispatch,
+} from 'react';
+import { CompositeFieldContext, FormAction, FormState, FormStateContext, useForm } from '../hooks';
 
-type OnSubmitFn<TValue extends { [key: string]: any }> = (values: TValue) => Promise<any>;
+interface FormRenderer<TValue extends { [key: string]: any }> {
+  (formState: FormState<TValue>, formDispatch: Dispatch<FormAction<TValue>>): ReactElement | null;
+}
 
-type FormRenderer<TValue extends { [key: string]: any }> = (
-  form: FormAPI<TValue>,
-) => ReactElement | null;
-
-interface IProps<TValue extends { [key: string]: any }> {
-  as?: string | ComponentType<any>;
+interface FormProps<TValue extends { [key: string]: any }> {
   children: FormRenderer<TValue> | ReactNode;
-  enableReinitialize?: boolean;
-  initialValues?: TValue;
-  onSubmit?: OnSubmitFn<TValue>;
+  initialValue?: TValue;
+  onSubmit?: (values: TValue) => Promise<void>;
+  onValidate?: (values: TValue) => Promise<void>;
   validateOnChange?: boolean;
-  validationSchema?: any;
 }
 
 interface FormComponent {
   <TValue extends { [key: string]: any } = { [key: string]: any }>(
-    props: JSX.IntrinsicElements['form'] & IProps<TValue>,
+    props: JSX.IntrinsicElements['form'] & FormProps<TValue>,
   ): ReactElement | null;
   <
     TValue extends { [key: string]: any } = { [key: string]: any },
     TAs extends keyof JSX.IntrinsicElements = any
   >(
-    props: { as: TAs } & JSX.IntrinsicElements[TAs] & IProps<TValue>,
+    props: { as: TAs } & JSX.IntrinsicElements[TAs] & FormProps<TValue>,
   ): ReactElement | null;
   <
     TValue extends { [key: string]: any } = { [key: string]: any },
     TAs extends ComponentType<any> = FC<{}>
   >(
-    props: { as: TAs } & ComponentProps<TAs> & IProps<TValue>,
+    props: { as: TAs } & ComponentProps<TAs> & FormProps<TValue>,
   ): ReactElement | null;
   displayName?: string;
 }
 
-const defaults = {
-  as: 'form',
-  enableReinitialize: false,
-  initialValue: {},
-  onSubmit: async () => undefined,
-  validateOnChange: false,
-  validationSchema: yup.object(),
-};
-
-export const Form: FormComponent = function Form<
-  TValue extends { [key: string]: any } = { [key: string]: any }
->({
-  as: As = defaults.as,
+export const Form: FormComponent = function Form({
+  as = 'form',
   children,
-  enableReinitialize = defaults.enableReinitialize,
-  initialValues = defaults.initialValue as TValue,
-  onSubmit = defaults.onSubmit,
-  validateOnChange = defaults.validateOnChange,
-  validationSchema = defaults.validationSchema,
-  ...rest
-}: IProps<TValue>) {
-  const form = useForm(
-    initialValues,
-    onSubmit,
-    validationSchema,
-    validateOnChange,
-    enableReinitialize,
+  initialValue,
+  onSubmit,
+  onValidate,
+  validateOnChange,
+  ...restProps
+}: FormProps<{ [key: string]: any }> & { as: keyof JSX.IntrinsicElements; [key: string]: any }) {
+  const [formState, formDispatch] = useForm<{
+    [key: string]: any;
+  }>(initialValue, onSubmit, onValidate, validateOnChange);
+  const formStateValue: [typeof formState, typeof formDispatch] = useMemo(
+    () => [formState, formDispatch],
+    [formState],
   );
+  const handleSubmit: FormEventHandler = useCallback(e => {
+    e.preventDefault();
+    formDispatch({ type: 'SUBMIT' });
+  }, []);
 
   return (
-    <form.FormProvider value={form}>
-      <form.FieldProvider value={form}>
-        {typeof children === 'function' ? (
-          (children as FormRenderer<any>)(form)
-        ) : (
-          <As onSubmit={form.handleSubmit} {...rest}>
-            {children}
-          </As>
-        )}
-      </form.FieldProvider>
-    </form.FormProvider>
+    <FormStateContext.Provider value={formStateValue}>
+      <CompositeFieldContext.Provider value={formStateValue}>
+        {typeof children === 'function'
+          ? children(formState, formDispatch)
+          : createElement(as, {
+              onSubmit: handleSubmit,
+              children,
+              ...restProps,
+            })}
+      </CompositeFieldContext.Provider>
+    </FormStateContext.Provider>
   );
-};
+} as any;

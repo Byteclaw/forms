@@ -1,16 +1,17 @@
 import { act, fireEvent, render } from '@testing-library/react';
 import React from 'react';
-import { Field, Form, FormProvider } from '..';
+import { ObjectField, Field, Form, FormProvider } from '..';
 
-describe('Field', () => {
+describe('ObjectField', () => {
   it('works correctly', async () => {
     let formState: any = null;
     const onSubmit = jest.fn().mockResolvedValue(Promise.resolve());
     const onValidate = jest.fn().mockResolvedValue(Promise.resolve());
-    const { getByTestId } = render(
+    const { getByTestId, rerender } = render(
       <Form data-testid="form" onSubmit={onSubmit} onValidate={onValidate}>
-        <Field data-testid="firstName" name="firstName" />
-        <Field data-testid="lastName" name="lastName" />
+        <ObjectField name="person">
+          <Field data-testid="firstName" name="firstName" />
+        </ObjectField>
         <FormProvider>
           {state => {
             formState = state;
@@ -40,7 +41,7 @@ describe('Field', () => {
       error: undefined,
       dirty: true,
       initialValue: undefined,
-      value: { firstName: 'a' },
+      value: { person: { firstName: 'a' } },
     });
 
     fireEvent.change(getByTestId('firstName'), { target: { value: 'ab' } });
@@ -58,7 +59,7 @@ describe('Field', () => {
       error: undefined,
       dirty: true,
       initialValue: undefined,
-      value: { firstName: 'abcdef' },
+      value: { person: { firstName: 'abcdef' } },
     });
 
     // now try to submit and change when is working
@@ -70,7 +71,7 @@ describe('Field', () => {
       error: undefined,
       dirty: true,
       initialValue: undefined,
-      value: { firstName: 'abcdef' },
+      value: { person: { firstName: 'abcdef' } },
     });
 
     // try to change now
@@ -82,7 +83,7 @@ describe('Field', () => {
       error: undefined,
       dirty: true,
       initialValue: undefined,
-      value: { firstName: 'abcdef' },
+      value: { person: { firstName: 'abcdef' } },
     });
 
     await Promise.resolve();
@@ -93,7 +94,7 @@ describe('Field', () => {
       error: undefined,
       dirty: true,
       initialValue: undefined,
-      value: { firstName: 'abcdef' },
+      value: { person: { firstName: 'abcdef' } },
     });
 
     // try to change now
@@ -105,7 +106,7 @@ describe('Field', () => {
       error: undefined,
       dirty: true,
       initialValue: undefined,
-      value: { firstName: 'abcdef' },
+      value: { person: { firstName: 'abcdef' } },
     });
 
     await Promise.resolve();
@@ -116,55 +117,36 @@ describe('Field', () => {
       error: undefined,
       dirty: true,
       initialValue: undefined,
-      value: { firstName: 'abcdef' },
-    });
-  });
-
-  it('propagates changed event if unmounted and does not propagate a changed value', async () => {
-    let formState: any = null;
-    const onSubmit = jest.fn();
-
-    function ControlledForm({ hideInput = false }: { hideInput?: boolean }) {
-      return (
-        <Form onSubmit={onSubmit}>
-          {hideInput ? null : <Field data-testid="firstName" name="firstName" />}
-          <Field data-testid="lastName" name="lastName" />
-          <FormProvider>
-            {state => {
-              formState = state;
-              return null;
-            }}
-          </FormProvider>
-        </Form>
-      );
-    }
-
-    const { getByTestId, rerender } = render(<ControlledForm />);
-
-    // change first name, triggers change
-    fireEvent.change(getByTestId('firstName'), { target: { value: 'a' } });
-
-    expect(formState).toMatchObject({
-      status: 'CHANGING',
-      changingCount: 1,
-      error: undefined,
-      dirty: false,
-      initialValue: undefined,
-      value: undefined,
+      value: { person: { firstName: 'abcdef' } },
     });
 
-    rerender(<ControlledForm hideInput />);
-
-    // now debounce (propagates that field is changed)
-    act(() => jest.runAllTimers());
+    // change initial values
+    rerender(
+      <Form
+        data-testid="form"
+        initialValue={{ person: { firstName: 'Fero' } }}
+        onSubmit={onSubmit}
+        onValidate={onValidate}
+      >
+        <ObjectField name="person">
+          <Field data-testid="firstName" name="firstName" />
+        </ObjectField>
+        <FormProvider>
+          {state => {
+            formState = state;
+            return null;
+          }}
+        </FormProvider>
+      </Form>,
+    );
 
     expect(formState).toMatchObject({
       status: 'IDLE',
       changingCount: 0,
       error: undefined,
       dirty: false,
-      initialValue: undefined,
-      value: undefined,
+      initialValue: { person: { firstName: 'Fero' } },
+      value: { person: { firstName: 'Fero' } },
     });
   });
 });

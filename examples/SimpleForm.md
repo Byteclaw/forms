@@ -8,19 +8,21 @@ Simple login form with `email` and `password` fields and validator.
 import '@babel/polyfill';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { Field, FieldError, Form, FormProvider } from '@byteclaw/forms';
+import { Field, FieldError, Form, FormProvider, createValidatorFromYup } from '@byteclaw/forms';
 import { object, string } from 'yup';
 
-const validationSchema = object()
-  .noUnknown(true)
-  .shape({
-    email: string()
-      .email()
-      .required(),
-    password: string()
-      .trim()
-      .required(),
-  });
+const validate = createValidatorFromYup(
+  object()
+    .noUnknown(true)
+    .shape({
+      email: string()
+        .email()
+        .required(),
+      password: string()
+        .trim()
+        .required(),
+    }),
+);
 
 function App() {
   return (
@@ -29,8 +31,9 @@ function App() {
       <Form
         style={{ display: 'flex', flexDirection: 'column', width: 400 }}
         onSubmit={async values => alert(JSON.stringify(values, null, '  '))}
-        validationSchema={validationSchema}
+        onValidate={validate}
       >
+        <FieldError>{({ error }) => error || null}</FieldError>
         <Field name="email" placeholder="email" type="email" />
         <FieldError name="email">{({ error }) => error || null}</FieldError>
         <Field name="password" placeholder="password" type="password" />

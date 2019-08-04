@@ -1,14 +1,22 @@
-import { useContext } from 'react';
-import { FormFieldContext } from './formContext';
-import { ArrayFieldAPI } from './useArrayField';
-import { ObjectFieldAPI } from './useObjectField';
-import { FormAPI } from './useForm';
-import { ArrayFieldAction } from './arrayFieldReducer';
-import { ObjectFieldAction } from './objectFieldReducer';
+import { createContext, Dispatch, useContext } from 'react';
 
-export function useParentField():
-  | ArrayFieldAPI<any[], ArrayFieldAction>
-  | FormAPI<any>
-  | ObjectFieldAPI<any, ObjectFieldAction> {
-  return useContext(FormFieldContext);
+export interface ParentFieldState<TValue = any[] | { [key: string]: any }> {
+  error: string | { [key: string]: any } | undefined;
+  dirty: boolean;
+  initialValue: TValue | undefined;
+  valid: boolean;
+  value: TValue | undefined;
+}
+
+export type ParentFieldAction = { type: 'CHANGE_FIELD'; name: string; value: any };
+
+export const CompositeFieldContext = createContext<
+  [ParentFieldState<any>, Dispatch<ParentFieldAction>]
+>(undefined as any);
+
+export function useParentField<TValue = any[] | { [key: string]: any }>(): [
+  ParentFieldState<TValue>,
+  Dispatch<ParentFieldAction>,
+] {
+  return useContext(CompositeFieldContext);
 }
