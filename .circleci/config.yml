@@ -5,16 +5,17 @@ jobs:
     working_directory: ~/forms
     docker:
       - image: circleci/node:10.15.0
-        environment:
-          CI: 1
     steps:
       - checkout
-      - run:
-          name: Upgrade yarn
-          command: sudo npm install -g yarn
+      - restore_cache:
+          key: yarndeps-{{ .Branch }}-{{ checksum "yarn.lock" }}
       - run:
           name: Installing javascript dependencies
           command: yarn install --cache-folder ~/.yarn-cache
+      - save_cache:
+          key: yarndeps-{{ .Branch }}-{{ checksum "yarn.lock" }}
+          paths:
+            - ~/.yarn-cache
       - run:
           name: Linting the source code
           command: yarn lint
@@ -24,6 +25,11 @@ jobs:
       - run:
           name: Testing the source code
           command: yarn test:ci
+      - run:
+          name: Bundlesize
+          command: |
+            yarn build
+            yarn bundlesize
 
 workflows:
   version: 2

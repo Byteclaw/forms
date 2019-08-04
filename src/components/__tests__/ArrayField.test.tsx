@@ -1,16 +1,17 @@
 import { act, fireEvent, render } from '@testing-library/react';
 import React from 'react';
-import { Field, Form, FormProvider } from '..';
+import { ArrayField, Field, Form, FormProvider } from '..';
 
-describe('Field', () => {
+describe('ArrayField', () => {
   it('works correctly', async () => {
     let formState: any = null;
     const onSubmit = jest.fn().mockResolvedValue(Promise.resolve());
     const onValidate = jest.fn().mockResolvedValue(Promise.resolve());
-    const { getByTestId } = render(
+    const { getByTestId, rerender } = render(
       <Form data-testid="form" onSubmit={onSubmit} onValidate={onValidate}>
-        <Field data-testid="firstName" name="firstName" />
-        <Field data-testid="lastName" name="lastName" />
+        <ArrayField name="phones">
+          <Field data-testid="0" name="0" />
+        </ArrayField>
         <FormProvider>
           {state => {
             formState = state;
@@ -21,7 +22,7 @@ describe('Field', () => {
     );
 
     // change first name, triggers change
-    fireEvent.change(getByTestId('firstName'), { target: { value: 'a' } });
+    fireEvent.change(getByTestId('0'), { target: { value: 'a' } });
 
     expect(formState).toMatchObject({
       status: 'CHANGING',
@@ -40,14 +41,14 @@ describe('Field', () => {
       error: undefined,
       dirty: true,
       initialValue: undefined,
-      value: { firstName: 'a' },
+      value: { phones: ['a'] },
     });
 
-    fireEvent.change(getByTestId('firstName'), { target: { value: 'ab' } });
-    fireEvent.change(getByTestId('firstName'), { target: { value: 'abc' } });
-    fireEvent.change(getByTestId('firstName'), { target: { value: 'abcd' } });
-    fireEvent.change(getByTestId('firstName'), { target: { value: 'abcde' } });
-    fireEvent.change(getByTestId('firstName'), { target: { value: 'abcdef' } });
+    fireEvent.change(getByTestId('0'), { target: { value: 'ab' } });
+    fireEvent.change(getByTestId('0'), { target: { value: 'abc' } });
+    fireEvent.change(getByTestId('0'), { target: { value: 'abcd' } });
+    fireEvent.change(getByTestId('0'), { target: { value: 'abcde' } });
+    fireEvent.change(getByTestId('0'), { target: { value: 'abcdef' } });
 
     // now debounce (propagates that field is changed)
     act(() => jest.runAllTimers());
@@ -58,7 +59,7 @@ describe('Field', () => {
       error: undefined,
       dirty: true,
       initialValue: undefined,
-      value: { firstName: 'abcdef' },
+      value: { phones: ['abcdef'] },
     });
 
     // now try to submit and change when is working
@@ -70,11 +71,11 @@ describe('Field', () => {
       error: undefined,
       dirty: true,
       initialValue: undefined,
-      value: { firstName: 'abcdef' },
+      value: { phones: ['abcdef'] },
     });
 
     // try to change now
-    fireEvent.change(getByTestId('firstName'), { target: { value: 'abcdefaaa' } });
+    fireEvent.change(getByTestId('0'), { target: { value: 'abcdefaaa' } });
 
     expect(formState).toMatchObject({
       status: 'VALIDATING',
@@ -82,7 +83,7 @@ describe('Field', () => {
       error: undefined,
       dirty: true,
       initialValue: undefined,
-      value: { firstName: 'abcdef' },
+      value: { phones: ['abcdef'] },
     });
 
     await Promise.resolve();
@@ -93,11 +94,11 @@ describe('Field', () => {
       error: undefined,
       dirty: true,
       initialValue: undefined,
-      value: { firstName: 'abcdef' },
+      value: { phones: ['abcdef'] },
     });
 
     // try to change now
-    fireEvent.change(getByTestId('firstName'), { target: { value: 'abcdefaaa' } });
+    fireEvent.change(getByTestId('0'), { target: { value: 'abcdefaaa' } });
 
     expect(formState).toMatchObject({
       status: 'SUBMITTING',
@@ -105,7 +106,7 @@ describe('Field', () => {
       error: undefined,
       dirty: true,
       initialValue: undefined,
-      value: { firstName: 'abcdef' },
+      value: { phones: ['abcdef'] },
     });
 
     await Promise.resolve();
@@ -116,55 +117,36 @@ describe('Field', () => {
       error: undefined,
       dirty: true,
       initialValue: undefined,
-      value: { firstName: 'abcdef' },
-    });
-  });
-
-  it('propagates changed event if unmounted and does not propagate a changed value', async () => {
-    let formState: any = null;
-    const onSubmit = jest.fn();
-
-    function ControlledForm({ hideInput = false }: { hideInput?: boolean }) {
-      return (
-        <Form onSubmit={onSubmit}>
-          {hideInput ? null : <Field data-testid="firstName" name="firstName" />}
-          <Field data-testid="lastName" name="lastName" />
-          <FormProvider>
-            {state => {
-              formState = state;
-              return null;
-            }}
-          </FormProvider>
-        </Form>
-      );
-    }
-
-    const { getByTestId, rerender } = render(<ControlledForm />);
-
-    // change first name, triggers change
-    fireEvent.change(getByTestId('firstName'), { target: { value: 'a' } });
-
-    expect(formState).toMatchObject({
-      status: 'CHANGING',
-      changingCount: 1,
-      error: undefined,
-      dirty: false,
-      initialValue: undefined,
-      value: undefined,
+      value: { phones: ['abcdef'] },
     });
 
-    rerender(<ControlledForm hideInput />);
-
-    // now debounce (propagates that field is changed)
-    act(() => jest.runAllTimers());
+    // change initial values
+    rerender(
+      <Form
+        data-testid="form"
+        initialValue={{ phones: ['abc', 'efg'] }}
+        onSubmit={onSubmit}
+        onValidate={onValidate}
+      >
+        <ArrayField name="phones">
+          <Field data-testid="0" name="0" />
+        </ArrayField>
+        <FormProvider>
+          {state => {
+            formState = state;
+            return null;
+          }}
+        </FormProvider>
+      </Form>,
+    );
 
     expect(formState).toMatchObject({
       status: 'IDLE',
       changingCount: 0,
       error: undefined,
       dirty: false,
-      initialValue: undefined,
-      value: undefined,
+      initialValue: { phones: ['abc', 'efg'] },
+      value: { phones: ['abc', 'efg'] },
     });
   });
 });

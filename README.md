@@ -25,34 +25,43 @@ yarn add @byteclaw/forms yup
 
 ```js
 import { Fragment } from 'react';
-import { ArrayField, Field, Form, FormProvider, ObjectField } from '@byteclaw/forms';
+import {
+  ArrayField,
+  Field,
+  Form,
+  FormProvider,
+  ObjectField,
+  createValidatorFromYup,
+} from '@byteclaw/forms';
 import * as yup from 'yup';
 
-const validator = yup.object().shape({
-  productTitle: yup.string().required(),
-  images: yup
-    .array()
-    .of(
-      yup.object().shape({
-        title: yup.string().required(),
-        url: yup
-          .string()
-          .url()
-          .required(),
-      }),
-    )
-    .required(),
-  attributes: yup.object().shape({
-    color: yup
-      .string()
-      .matches(/^#[0-9a-fA-F]{6}$/)
+const validator = createValidatorFromYup(
+  yup.object().shape({
+    productTitle: yup.string().required(),
+    images: yup
+      .array()
+      .of(
+        yup.object().shape({
+          title: yup.string().required(),
+          url: yup
+            .string()
+            .url()
+            .required(),
+        }),
+      )
       .required(),
+    attributes: yup.object().shape({
+      color: yup
+        .string()
+        .matches(/^#[0-9a-fA-F]{6}$/)
+        .required(),
+    }),
   }),
-});
+);
 
-<Form onSubmit={async values => {}} validationSchema={validator}>
+<Form onSubmit={async values => {}} onValidate={validator}>
   {/* global error of form */}
-  <FieldError name="">{({ error }) => error || null}</FieldError>
+  <FieldError>{({ error }) => error || null}</FieldError>
   <Field name="productTitle" />
   <FieldError name="productTitle">{({ error }) => error || null}</FieldError>
   <ArrayField name="images">
