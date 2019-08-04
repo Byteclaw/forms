@@ -113,12 +113,16 @@
   },
   "bundlesize": [
     {
-      "path": "./dist/index.cjs.js",
-      "maxSize": "8kB"
+      "path": "./dist/index.js",
+      "maxSize": "4kB"
     },
     {
-      "path": "./dist/forms.umd.min.js",
-      "maxSize": "30kB"
+      "path": "./dist/index.modern.js",
+      "maxSize": "4kB"
+    },
+    {
+      "path": "./dist/index.umd.js",
+      "maxSize": "4kB"
     }
   ],
   "publishConfig": {
