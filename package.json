@@ -83,7 +83,7 @@
   "scripts": {
     "contributors:add": "all-contributors add",
     "contributors:generate": "all-contributors generate",
-    "build": "microbundle --jsx React.createComponent",
+    "build": "microbundle --jsx React.createElement",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "lint:fix": "eslint --fix \"src/**/*.{ts,tsx}\"",
     "lint-staged": "lint-staged",
