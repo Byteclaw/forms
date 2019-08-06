@@ -60,7 +60,7 @@ export function formReducer<TValue extends { [key: string]: any } = { [key: stri
       return state;
     }
     case 'SUBMIT': {
-      if (state.status !== 'IDLE' || state.value == null) {
+      if (state.status !== 'IDLE') {
         return state;
       }
 
@@ -81,6 +81,13 @@ export function formReducer<TValue extends { [key: string]: any } = { [key: stri
     }
     case 'VALIDATING_DONE': {
       if (state.status === 'VALIDATING') {
+        if (state.value == null && action.value == null) {
+          return {
+            ...state,
+            status: 'IDLE',
+          };
+        }
+
         return {
           ...state,
           status: 'SUBMITTING',
