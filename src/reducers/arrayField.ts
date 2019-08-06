@@ -13,6 +13,7 @@ export type ArrayFieldAction<TValue extends any[] = any[]> =
       value: TValue extends (infer I)[] ? I : any;
     }
   | { type: 'SET_INITIAL_VALUE'; value: TValue }
+  | { type: 'SET_VALUE'; value: TValue }
   | { type: 'SET_ERROR'; error: string | { [key: string]: any } | undefined };
 
 export function initArrayFieldState<TValue extends any[] = any[]>(
@@ -55,12 +56,26 @@ export function arrayFieldReducer<TValue extends any[] = any[]>(
         value,
       };
     }
+    /**
+     * Set initial value is called if you change initial value on whole form
+     */
     case 'SET_INITIAL_VALUE': {
       return {
         error: undefined,
         initialValue: action.value,
         dirty: false,
         valid: true,
+        value: action.value,
+      };
+    }
+    /**
+     * Set value is basically called from parent's chain when you submit the form
+     * And the validator returns "normalized" value
+     */
+    case 'SET_VALUE': {
+      return {
+        ...state,
+        dirty: state.initialValue !== action.value,
         value: action.value,
       };
     }

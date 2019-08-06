@@ -7,7 +7,7 @@ import {
 } from '../reducers';
 import { useFormState } from './useFormState';
 import { useParentField } from './useParentField';
-import { useInitialValue } from './useInitialValue';
+import { useValues } from './useValues';
 import { useError } from './useError';
 
 export function useObjectField<TValue extends { [key: string]: any } = { [key: string]: any }>(
@@ -15,7 +15,7 @@ export function useObjectField<TValue extends { [key: string]: any } = { [key: s
 ): [ObjectFieldState<TValue>, Dispatch<ObjectFieldAction<TValue>>] {
   const [formState] = useFormState();
   const [parentFieldState, parentFieldDispatch] = useParentField();
-  const initialValue = useInitialValue<TValue>(name, parentFieldState);
+  const [initialValue, parentsValue] = useValues<TValue>(name, parentFieldState);
   const error = useError(name, parentFieldState);
   const [fieldState, fieldDispatch] = useReducer(
     objectFieldReducer as Reducer<ObjectFieldState<TValue>, ObjectFieldAction<TValue>>,
@@ -23,6 +23,7 @@ export function useObjectField<TValue extends { [key: string]: any } = { [key: s
     initObjectFieldState,
   );
   const previousState = useRef(fieldState);
+  const previousParentsValue = useRef(parentsValue);
 
   const dispatch: Dispatch<ObjectFieldAction<TValue>> = useCallback(
     action => {
@@ -36,6 +37,15 @@ export function useObjectField<TValue extends { [key: string]: any } = { [key: s
   // if initial value changes, set it
   if (initialValue !== fieldState.initialValue) {
     fieldDispatch({ type: 'SET_INITIAL_VALUE', value: initialValue as TValue });
+  }
+
+  // if value from parent changes, set it's value
+  if (previousParentsValue.current !== parentsValue) {
+    previousParentsValue.current = parentsValue;
+
+    if (parentsValue !== fieldState.value) {
+      fieldDispatch({ type: 'SET_VALUE', value: parentsValue as TValue });
+    }
   }
 
   if (

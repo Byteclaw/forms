@@ -19,7 +19,7 @@ describe('Form', () => {
       .mockRejectedValueOnce(
         new ValidationError([{ path: ['person', 'firstName'], error: 'First name Error' }]),
       )
-      .mockResolvedValueOnce(Promise.resolve())
+      .mockResolvedValueOnce(Promise.resolve({ person: { firstName: 'Normalized' } }))
       .mockResolvedValueOnce(Promise.resolve())
       .mockResolvedValueOnce(Promise.resolve());
     const { getByTestId } = render(
@@ -182,6 +182,8 @@ describe('Form', () => {
 
     await Promise.resolve();
 
+    expect(getByTestId('firstName').getAttribute('value')).toBe('Normalized');
+
     expect(formState).toMatchObject({
       status: 'SUBMITTING',
       changingCount: 0,
@@ -189,10 +191,12 @@ describe('Form', () => {
       dirty: true,
       initialValue: undefined,
       valid: true,
-      value: { person: { firstName: 'a' } },
+      value: { person: { firstName: 'Normalized' } },
     });
 
     await Promise.resolve();
+
+    expect(onSubmit).toHaveBeenNthCalledWith(1, { person: { firstName: 'Normalized' } });
 
     expect(formState).toMatchObject({
       status: 'IDLE',
@@ -203,7 +207,7 @@ describe('Form', () => {
       dirty: true,
       initialValue: undefined,
       valid: false,
-      value: { person: { firstName: 'a' } },
+      value: { person: { firstName: 'Normalized' } },
     });
 
     fireEvent.submit(getByTestId('form'));
@@ -215,7 +219,7 @@ describe('Form', () => {
       dirty: true,
       initialValue: undefined,
       valid: true,
-      value: { person: { firstName: 'a' } },
+      value: { person: { firstName: 'Normalized' } },
     });
 
     await Promise.resolve();
@@ -227,7 +231,7 @@ describe('Form', () => {
       dirty: true,
       initialValue: undefined,
       valid: true,
-      value: { person: { firstName: 'a' } },
+      value: { person: { firstName: 'Normalized' } },
     });
 
     await Promise.resolve();
@@ -241,7 +245,7 @@ describe('Form', () => {
       dirty: true,
       initialValue: undefined,
       valid: false,
-      value: { person: { firstName: 'a' } },
+      value: { person: { firstName: 'Normalized' } },
     });
 
     fireEvent.submit(getByTestId('form'));
@@ -253,7 +257,7 @@ describe('Form', () => {
       dirty: true,
       initialValue: undefined,
       valid: true,
-      value: { person: { firstName: 'a' } },
+      value: { person: { firstName: 'Normalized' } },
     });
 
     await Promise.resolve();
@@ -265,7 +269,7 @@ describe('Form', () => {
       dirty: true,
       initialValue: undefined,
       valid: true,
-      value: { person: { firstName: 'a' } },
+      value: { person: { firstName: 'Normalized' } },
     });
 
     await Promise.resolve();
@@ -277,7 +281,7 @@ describe('Form', () => {
       dirty: true,
       initialValue: undefined,
       valid: true,
-      value: { person: { firstName: 'a' } },
+      value: { person: { firstName: 'Normalized' } },
     });
   });
 
@@ -290,7 +294,7 @@ describe('Form', () => {
       .mockRejectedValueOnce(
         new ValidationError([{ path: ['person', 'firstName'], error: 'First name Error' }]),
       )
-      .mockResolvedValueOnce(Promise.resolve());
+      .mockResolvedValueOnce(Promise.resolve({ person: { firstName: 'Normalized' } }));
     const { getByTestId } = render(
       <Form data-testid="form" onValidate={onValidate} validateOnChange>
         <ObjectField name="person">
@@ -373,6 +377,29 @@ describe('Form', () => {
       changingCount: 0,
       value: { person: { firstName: 'abc' } },
       valid: false,
+    });
+
+    // change first name, triggers change
+    fireEvent.change(getByTestId('firstName'), { target: { value: 'abcd' } });
+
+    expect(formState).toMatchObject({ status: 'CHANGING', changingCount: 1 });
+
+    // now debounce (propagates that field is changed)
+    act(() => jest.runAllTimers());
+    // debounce validate on change
+    act(() => jest.runAllTimers());
+
+    expect(formState).toMatchObject({ status: 'VALIDATING_ON_CHANGE', changingCount: 0 });
+
+    await Promise.resolve();
+
+    expect(formState).toMatchObject({
+      dirty: true,
+      error: undefined,
+      status: 'IDLE',
+      changingCount: 0,
+      value: { person: { firstName: 'Normalized' } },
+      valid: true,
     });
   });
 });

@@ -7,7 +7,7 @@ import {
 } from '../reducers';
 import { useFormState } from './useFormState';
 import { useParentField } from './useParentField';
-import { useInitialValue } from './useInitialValue';
+import { useValues } from './useValues';
 import { useError } from './useError';
 
 export function useArrayField<TValue extends any[] = any[]>(
@@ -15,7 +15,7 @@ export function useArrayField<TValue extends any[] = any[]>(
 ): [ArrayFieldState<TValue>, Dispatch<ArrayFieldAction<TValue>>] {
   const [formState] = useFormState();
   const [parentFieldState, parentFieldDispatch] = useParentField();
-  const initialValue = useInitialValue<TValue>(name.toString(), parentFieldState);
+  const [initialValue, parentsValue] = useValues<TValue>(name.toString(), parentFieldState);
   const error = useError(name.toString(), parentFieldState);
   const [fieldState, fieldDispatch] = useReducer(
     arrayFieldReducer as Reducer<ArrayFieldState<TValue>, ArrayFieldAction<TValue>>,
@@ -23,6 +23,7 @@ export function useArrayField<TValue extends any[] = any[]>(
     initArrayFieldState,
   );
   const previousState = useRef(fieldState);
+  const previousParentsValue = useRef(parentsValue);
 
   const dispatch: Dispatch<ArrayFieldAction<TValue>> = useCallback(
     action => {
@@ -36,6 +37,15 @@ export function useArrayField<TValue extends any[] = any[]>(
   // if initial value changes, set it
   if (initialValue !== fieldState.initialValue) {
     fieldDispatch({ type: 'SET_INITIAL_VALUE', value: initialValue as TValue });
+  }
+
+  // if value from parent changes, set it's value
+  if (previousParentsValue.current !== parentsValue) {
+    previousParentsValue.current = parentsValue;
+
+    if (parentsValue !== fieldState.value) {
+      fieldDispatch({ type: 'SET_VALUE', value: parentsValue as TValue });
+    }
   }
 
   if (

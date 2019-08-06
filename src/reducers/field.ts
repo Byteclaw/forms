@@ -14,6 +14,7 @@ export type FieldAction<TValue = any> =
   | { type: 'FOCUS' }
   | { type: 'BLUR' }
   | { type: 'SET_INITIAL_VALUE'; value: TValue }
+  | { type: 'SET_VALUE'; value: TValue }
   | { type: 'SET_ERROR'; error: string | undefined };
 
 export function initFieldReducer<TValue = any>(
@@ -66,6 +67,13 @@ export function fieldReducer<TValue = any>(
         previousValue: action.value,
         touched: false,
         valid: true,
+        value: action.value,
+      };
+    }
+    case 'SET_VALUE': {
+      return {
+        ...state,
+        dirty: action.value !== state.initialValue,
         value: action.value,
       };
     }

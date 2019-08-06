@@ -13,6 +13,7 @@ export type ObjectFieldAction<TValue extends { [key: string]: any } = { [key: st
       value: any;
     }
   | { type: 'SET_INITIAL_VALUE'; value: TValue }
+  | { type: 'SET_VALUE'; value: TValue }
   | { type: 'SET_ERROR'; error: string | { [key: string]: any } | undefined };
 
 export function initObjectFieldState<
@@ -50,13 +51,27 @@ export function objectFieldReducer<TValue extends { [key: string]: any } = { [ke
         },
       };
     }
+    /**
+     * Set initial value is called if you change initial value on whole form
+     */
     case 'SET_INITIAL_VALUE': {
       return {
         ...state,
         error: undefined,
-        dirty: false,
         initialValue: action.value,
+        dirty: false,
         valid: true,
+        value: action.value,
+      };
+    }
+    /**
+     * Set value is basically called from parent's chain when you submit the form
+     * And the validator returns "normalized" value
+     */
+    case 'SET_VALUE': {
+      return {
+        ...state,
+        dirty: state.initialValue !== action.value,
         value: action.value,
       };
     }

@@ -3,7 +3,7 @@ import { useDebouncedCallback } from './useDebouncedCallback';
 import { useFormState } from './useFormState';
 import { useParentField } from './useParentField';
 import { fieldReducer, FieldAction, FieldState, initFieldReducer } from '../reducers';
-import { useInitialValue } from './useInitialValue';
+import { useValues } from './useValues';
 import { useError } from './useError';
 
 export { FieldState, FieldAction };
@@ -14,7 +14,7 @@ export function useField<TValue = any>(
 ): [FieldState<TValue>, Dispatch<FieldAction<TValue>>] {
   const [formState, formDispatch] = useFormState();
   const [parentFieldState, parentFieldDispatch] = useParentField();
-  const initialValue = useInitialValue<TValue>(name, parentFieldState);
+  const [initialValue, parentsValue] = useValues<TValue>(name, parentFieldState);
   const error = useError(name, parentFieldState);
   const [fieldState, fieldDispatch] = useReducer(
     fieldReducer as Reducer<FieldState<TValue>, FieldAction<TValue>>,
@@ -23,6 +23,7 @@ export function useField<TValue = any>(
   );
 
   const changingRef = useRef(false);
+  const previousParentsValue = useRef(parentsValue);
 
   const [propagateChanged, cancelChangedPropagation] = useDebouncedCallback(
     (value: TValue) => {
@@ -71,6 +72,15 @@ export function useField<TValue = any>(
   // if initial value changes, set it
   if (initialValue !== fieldState.initialValue) {
     fieldDispatch({ type: 'SET_INITIAL_VALUE', value: initialValue as TValue });
+  }
+
+  // if value from parent changes, set it's value
+  if (previousParentsValue.current !== parentsValue) {
+    previousParentsValue.current = parentsValue;
+
+    if (parentsValue !== fieldState.value) {
+      fieldDispatch({ type: 'SET_VALUE', value: parentsValue as TValue });
+    }
   }
 
   // if error is changed, propagate down

@@ -15,7 +15,7 @@ export { FormState, FormAction, ObjectFieldState, ObjectFieldAction };
 export function useForm<TValue extends { [key: string]: any } = { [key: string]: any }>(
   initialValue?: TValue,
   onSubmit?: (value: TValue) => Promise<void>,
-  onValidate?: (value: TValue) => Promise<void>,
+  onValidate?: (value: TValue) => Promise<TValue | void>,
   validateOnChange: boolean = false,
 ): [FormState<TValue>, Dispatch<FormAction<TValue>>] {
   const [state, dispatch] = useReducer(
@@ -44,8 +44,8 @@ export function useForm<TValue extends { [key: string]: any } = { [key: string]:
 
         if (onValidate) {
           onValidate(state.value!)
-            .then(() => {
-              dispatch({ type: 'VALIDATING_DONE' });
+            .then(value => {
+              dispatch({ type: 'VALIDATING_DONE', value: value || undefined });
             })
             .catch(e => {
               // process validation error

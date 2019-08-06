@@ -17,7 +17,7 @@ export type FormAction<TValue extends { [key: string]: any }> =
   | { type: 'SUBMITTING_DONE' }
   | { type: 'SUBMITTING_FAILED' }
   | { type: 'VALIDATE' }
-  | { type: 'VALIDATING_DONE' }
+  | { type: 'VALIDATING_DONE'; value?: TValue }
   | { type: 'VALIDATING_FAILED' }
   | ObjectFieldAction<TValue>;
 
@@ -84,6 +84,7 @@ export function formReducer<TValue extends { [key: string]: any } = { [key: stri
         return {
           ...state,
           status: 'SUBMITTING',
+          value: action.value ? action.value : state.value,
         };
       }
 
@@ -91,6 +92,7 @@ export function formReducer<TValue extends { [key: string]: any } = { [key: stri
         return {
           ...state,
           status: 'IDLE',
+          value: action.value ? action.value : state.value,
         };
       }
 
