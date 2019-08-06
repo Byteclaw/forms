@@ -11,14 +11,14 @@ import React, {
 import { ObjectFieldState, ObjectFieldAction } from '../reducers';
 import { CompositeFieldContext, useObjectField } from '../hooks';
 
-interface ObjectFieldRenderer<TValue> {
+export interface ObjectFieldRenderer<TValue extends { [key: string]: any }> {
   (
     state: ObjectFieldState<TValue>,
     dispatch: Dispatch<ObjectFieldAction<TValue>>,
   ): ReactElement | null;
 }
 
-interface ObjectFieldProps<TValue> {
+export interface ObjectFieldProps<TValue extends { [key: string]: any }> {
   children?: ObjectFieldRenderer<TValue> | ReactNode;
   name: string;
 }

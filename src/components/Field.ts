@@ -13,11 +13,11 @@ import {
 } from 'react';
 import { useField, FieldState, FieldAction } from '../hooks';
 
-interface FieldRenderer<TValue> {
+export interface FieldRenderer<TValue> {
   (state: FieldState<TValue>, dispatch: Dispatch<FieldAction<TValue>>): ReactElement | null;
 }
 
-interface FieldProps<TValue> {
+export interface FieldProps<TValue> {
   children?: FieldRenderer<TValue> | ReactNode;
   /**
    * Debounce delay, by default 300ms

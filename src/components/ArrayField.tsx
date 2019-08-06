@@ -11,14 +11,14 @@ import React, {
 import { ArrayFieldAction, ArrayFieldState } from '../reducers';
 import { CompositeFieldContext, useArrayField } from '../hooks';
 
-interface ArrayFieldRenderer<TValue extends any[]> {
+export interface ArrayFieldRenderer<TValue extends any[]> {
   (
     state: ArrayFieldState<TValue>,
     dispatch: Dispatch<ArrayFieldAction<TValue>>,
   ): ReactElement | null;
 }
 
-interface ArrayFieldProps<TValue extends any[]> {
+export interface ArrayFieldProps<TValue extends any[]> {
   children?: ArrayFieldRenderer<TValue> | ReactNode;
   name: string | number;
 }

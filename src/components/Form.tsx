@@ -12,11 +12,11 @@ import React, {
 } from 'react';
 import { CompositeFieldContext, FormAction, FormState, FormStateContext, useForm } from '../hooks';
 
-interface FormRenderer<TValue extends { [key: string]: any }> {
+export interface FormRenderer<TValue extends { [key: string]: any }> {
   (formState: FormState<TValue>, formDispatch: Dispatch<FormAction<TValue>>): ReactElement | null;
 }
 
-interface FormProps<TValue extends { [key: string]: any }> {
+export interface FormProps<TValue extends { [key: string]: any }> {
   children: FormRenderer<TValue> | ReactNode;
   initialValue?: TValue;
   onSubmit?: (values: TValue) => Promise<void>;

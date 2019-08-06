@@ -1,15 +1,15 @@
 import { ComponentProps, ComponentType, createElement, FC, forwardRef, ReactElement } from 'react';
 import { useError, useParentField } from '../hooks';
 
-interface FieldErrorRendererProps {
+export interface FieldErrorRendererProps {
   error: string | undefined | { [key: string]: any };
 }
 
-interface FieldErrorRenderer {
+export interface FieldErrorRenderer {
   (props: FieldErrorRendererProps): ReactElement | null;
 }
 
-interface FieldErrorProps {
+export interface FieldErrorProps {
   children?: FieldErrorRenderer;
   /**
    * Defaults to "" means that it looks for root errors on field
