@@ -42,7 +42,6 @@ export function useForm<TValue extends { [key: string]: any } = { [key: string]:
       if (state.status === 'VALIDATING' || state.status === 'VALIDATING_ON_CHANGE') {
         dispatch({ type: 'SET_ERROR', error: undefined });
 
-        // VALIDATING won't be called if value of form is undefined
         if (onValidate) {
           onValidate(state.value!)
             .then(() => {

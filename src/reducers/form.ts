@@ -70,7 +70,7 @@ export function formReducer<TValue extends { [key: string]: any } = { [key: stri
       };
     }
     case 'VALIDATE': {
-      if (state.status !== 'IDLE' || state.value == null) {
+      if (state.status !== 'IDLE') {
         return state;
       }
 
