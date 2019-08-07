@@ -1,5 +1,5 @@
 import isEqual from 'react-fast-compare';
-import { Dispatch, Reducer, useReducer, useRef } from 'react';
+import { Dispatch, Reducer, useReducer, useRef, useCallback } from 'react';
 import {
   FormState,
   FormAction,
@@ -14,7 +14,7 @@ export { FormState, FormAction, ObjectFieldState, ObjectFieldAction };
 
 export function useForm<TValue extends { [key: string]: any } = { [key: string]: any }>(
   initialValue?: TValue,
-  onChange?: (value: Partial<TValue> | undefined) => any,
+  onChange?: (value: Partial<TValue> | undefined) => Promise<void>,
   onSubmit?: (value: TValue) => Promise<void>,
   onValidate?: (value: Partial<TValue> | undefined) => Promise<TValue | void>,
   validateOnChange: boolean = false,
@@ -25,19 +25,18 @@ export function useForm<TValue extends { [key: string]: any } = { [key: string]:
     initFormState,
   );
   const previousFormState = useRef(state);
-  const previousValue = useRef(state.value);
+  const formDispatch: typeof dispatch = useCallback(
+    action => {
+      dispatch(action.type === 'CHANGE_FIELD' ? { ...action, validateOnChange } : action);
+    },
+    [validateOnChange],
+  );
 
   if (previousFormState.current !== state) {
     if (previousFormState.current.status !== state.status) {
       if (state.status === 'VALIDATING' || state.status === 'VALIDATING_ON_CHANGE') {
-        dispatch({ type: 'SET_ERROR', error: undefined });
-
-        const onValidatePromise = Promise.resolve(onValidate ? onValidate(state.value) : undefined);
-
-        onValidatePromise
-          .then(value => {
-            dispatch({ type: 'VALIDATING_DONE', value: value || undefined });
-          })
+        Promise.resolve(onValidate ? onValidate(state.value) : state.value)
+          .then(value => dispatch({ type: 'VALIDATING_DONE', value: value || state.value }))
           .catch(e => {
             // process validation error
             if (e instanceof ValidationError) {
@@ -50,9 +49,7 @@ export function useForm<TValue extends { [key: string]: any } = { [key: string]:
           });
       } else if (state.status === 'SUBMITTING') {
         // SUBMITTING won't be called if value of form is undefined
-        const onSubmitPromise = Promise.resolve(onSubmit ? onSubmit(state.value!) : undefined);
-
-        onSubmitPromise
+        Promise.resolve(onSubmit ? onSubmit(state.value!) : undefined)
           .then(() => {
             dispatch({ type: 'SUBMITTING_DONE' });
           })
@@ -69,18 +66,8 @@ export function useForm<TValue extends { [key: string]: any } = { [key: string]:
       }
     }
 
-    if (state.status === 'IDLE') {
-      if (!isEqual(previousValue.current, state.value)) {
-        previousValue.current = state.value;
-
-        if (onChange) {
-          onChange(state.value);
-        }
-
-        if (validateOnChange) {
-          dispatch({ type: 'VALIDATE' });
-        }
-      }
+    if (onChange && !isEqual(previousFormState.current.value, state.value)) {
+      onChange(state.value);
     }
 
     previousFormState.current = state;
@@ -94,5 +81,5 @@ export function useForm<TValue extends { [key: string]: any } = { [key: string]:
     dispatch({ type: 'SET_INITIAL_VALUE', value: initialValue as TValue });
   }
 
-  return [state, dispatch];
+  return [state, formDispatch];
 }

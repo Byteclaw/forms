@@ -1,4 +1,5 @@
-import { useCallback, useReducer, useRef, Dispatch, Reducer } from 'react';
+import { useCallback, useEffect, useReducer, useRef, Dispatch, Reducer } from 'react';
+import isEqual from 'react-fast-compare';
 import {
   initObjectFieldState,
   objectFieldReducer,
@@ -22,8 +23,8 @@ export function useObjectField<TValue extends { [key: string]: any } = { [key: s
     initialValue,
     initObjectFieldState,
   );
-  const previousState = useRef(fieldState);
-  const previousParentsValue = useRef(parentsValue);
+  const currentStateRef = useRef(fieldState);
+  const currentParentsValueRef = useRef(parentsValue);
 
   const dispatch: Dispatch<ObjectFieldAction<TValue>> = useCallback(
     action => {
@@ -35,28 +36,38 @@ export function useObjectField<TValue extends { [key: string]: any } = { [key: s
   );
 
   // if initial value changes, set it
-  if (initialValue !== fieldState.initialValue) {
+  if (!isEqual(initialValue, fieldState.initialValue)) {
     fieldDispatch({ type: 'SET_INITIAL_VALUE', value: initialValue as TValue });
   }
 
   // if value from parent changes, set it's value
-  if (previousParentsValue.current !== parentsValue) {
-    previousParentsValue.current = parentsValue;
+  if (!isEqual(currentParentsValueRef.current, parentsValue)) {
+    currentParentsValueRef.current = parentsValue;
 
     if (parentsValue !== fieldState.value) {
       fieldDispatch({ type: 'SET_VALUE', value: parentsValue as TValue });
     }
   }
 
-  if (
-    (formState.status === 'IDLE' || formState.status === 'CHANGING') &&
-    previousState.current.value !== fieldState.value &&
-    fieldState.value !== fieldState.initialValue
-  ) {
-    previousState.current = fieldState;
-    // propagate change to parent only if is changed and is different than initial value
-    parentFieldDispatch({ type: 'CHANGE_FIELD', name, value: fieldState.value });
+  if (currentStateRef.current !== fieldState) {
+    // propagate change
+    if (currentStateRef.current.changing !== fieldState.changing) {
+      if (fieldState.changing) {
+        parentFieldDispatch({ type: 'CHANGING', name });
+      } else {
+        parentFieldDispatch({ type: 'CHANGE_FIELD', name, value: fieldState.value });
+      }
+    }
+
+    currentStateRef.current = fieldState;
   }
+
+  // set field as changed on unmount
+  useEffect(() => {
+    return () => {
+      parentFieldDispatch({ type: 'CHANGE_FIELD', name, value: currentStateRef.current.value });
+    };
+  }, [name]);
 
   // if error is changed, propagate down
   if (error !== fieldState.error) {

@@ -1,4 +1,8 @@
+import isEqual from 'react-fast-compare';
+
 export interface ObjectFieldState<TValue extends { [key: string]: any } = { [key: string]: any }> {
+  changing: boolean;
+  changingFields: { [key: string]: any };
   dirty: boolean;
   error: string | { [key: string]: any } | undefined;
   initialValue: TValue | undefined;
@@ -7,6 +11,7 @@ export interface ObjectFieldState<TValue extends { [key: string]: any } = { [key
 }
 
 export type ObjectFieldAction<TValue extends { [key: string]: any } = { [key: string]: any }> =
+  | { type: 'CHANGING'; name: string }
   | {
       type: 'CHANGE_FIELD';
       name: keyof TValue;
@@ -20,6 +25,8 @@ export function initObjectFieldState<
   TValue extends { [key: string]: any } = { [key: string]: any }
 >(initialValue: TValue | undefined): ObjectFieldState<TValue> {
   return {
+    changing: false,
+    changingFields: {},
     error: undefined,
     dirty: false,
     initialValue,
@@ -33,22 +40,28 @@ export function objectFieldReducer<TValue extends { [key: string]: any } = { [ke
   action: ObjectFieldAction<TValue>,
 ): ObjectFieldState<TValue> {
   switch (action.type) {
+    case 'CHANGING': {
+      return {
+        ...state,
+        changing: true,
+        changingFields: {
+          ...state.changingFields,
+          [action.name]: true,
+        },
+      };
+    }
     case 'CHANGE_FIELD': {
-      if (state.value == null) {
-        return {
-          ...state,
-          dirty: true,
-          value: { [action.name]: action.value } as TValue,
-        };
-      }
+      const { [action.name]: a, ...changingFields } = state.changingFields;
 
       return {
         ...state,
+        changing: Object.keys(changingFields).length > 0,
+        changingFields,
         dirty: true,
         value: {
           ...state.value,
           [action.name]: action.value,
-        },
+        } as TValue,
       };
     }
     /**
@@ -57,6 +70,8 @@ export function objectFieldReducer<TValue extends { [key: string]: any } = { [ke
     case 'SET_INITIAL_VALUE': {
       return {
         ...state,
+        changing: false,
+        changingFields: {},
         error: undefined,
         initialValue: action.value,
         dirty: false,
@@ -71,7 +86,7 @@ export function objectFieldReducer<TValue extends { [key: string]: any } = { [ke
     case 'SET_VALUE': {
       return {
         ...state,
-        dirty: state.initialValue !== action.value,
+        dirty: !isEqual(state.initialValue, action.value),
         value: action.value,
       };
     }

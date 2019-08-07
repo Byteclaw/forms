@@ -6,7 +6,7 @@ import { Field, Form, FormProvider, ObjectField } from '..';
 describe('Form', () => {
   it('works correctly (validate on submit)', async () => {
     let formState: any = null;
-    const onChange = jest.fn().mockResolvedValue(Promise.resolve());
+    const onChange = jest.fn().mockResolvedValue(undefined);
     const onSubmit = jest
       .fn()
       .mockRejectedValueOnce(new Error('Submit error'))
@@ -43,7 +43,10 @@ describe('Form', () => {
 
     expect(formState).toMatchObject({
       status: 'CHANGING',
-      changingCount: 1,
+      changing: true,
+      changingFields: {
+        person: true,
+      },
       dirty: false,
       initialValue: undefined,
       value: undefined,
@@ -52,24 +55,26 @@ describe('Form', () => {
     // now debounce (propagates that field is changed)
     act(() => jest.runAllTimers());
 
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onChange).toHaveBeenLastCalledWith({ person: { firstName: 'a' } });
+
     expect(formState).toMatchObject({
       status: 'IDLE',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       error: undefined,
       dirty: true,
       initialValue: undefined,
       value: { person: { firstName: 'a' } },
     });
-
-    expect(onChange).toHaveBeenCalledTimes(1);
-    expect(onChange).toHaveBeenCalledWith({ person: { firstName: 'a' } });
 
     // now try to submit and change when is working
     fireEvent.submit(getByTestId('form'));
 
     expect(formState).toMatchObject({
       status: 'VALIDATING',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       error: undefined,
       dirty: true,
       initialValue: undefined,
@@ -78,12 +83,17 @@ describe('Form', () => {
 
     // resolve validator
     await Promise.resolve();
-    // resolve validator promise
+
+    expect(onValidate).toHaveBeenCalledTimes(1);
+    expect(onChange).toHaveBeenCalledTimes(1);
+
+    // resolve validation promise
     await Promise.resolve();
 
     expect(formState).toMatchObject({
       status: 'IDLE',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       error: {
         '': 'Root Error',
       },
@@ -97,7 +107,8 @@ describe('Form', () => {
 
     expect(formState).toMatchObject({
       status: 'VALIDATING',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       error: undefined,
       dirty: true,
       initialValue: undefined,
@@ -105,14 +116,19 @@ describe('Form', () => {
       value: { person: { firstName: 'a' } },
     });
 
-    // resolve validator
+    // resolve onChange and validation
     await Promise.resolve();
-    // resolve validator promise
+
+    expect(onValidate).toHaveBeenCalledTimes(2);
+    expect(onChange).toHaveBeenCalledTimes(1);
+
+    // resolve validation promise
     await Promise.resolve();
 
     expect(formState).toMatchObject({
       status: 'IDLE',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       error: {
         '': 'Root Error',
       },
@@ -126,7 +142,8 @@ describe('Form', () => {
 
     expect(formState).toMatchObject({
       status: 'VALIDATING',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       error: undefined,
       dirty: true,
       initialValue: undefined,
@@ -134,14 +151,19 @@ describe('Form', () => {
       value: { person: { firstName: 'a' } },
     });
 
-    // resolve validator
+    // resolve onChange and validation
     await Promise.resolve();
-    // resolve validator promise
+
+    expect(onValidate).toHaveBeenCalledTimes(3);
+    expect(onChange).toHaveBeenCalledTimes(1);
+
+    // resolve validation promise
     await Promise.resolve();
 
     expect(formState).toMatchObject({
       status: 'IDLE',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       error: {
         person: 'Object Error',
       },
@@ -155,7 +177,8 @@ describe('Form', () => {
 
     expect(formState).toMatchObject({
       status: 'VALIDATING',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       error: undefined,
       dirty: true,
       initialValue: undefined,
@@ -163,14 +186,19 @@ describe('Form', () => {
       value: { person: { firstName: 'a' } },
     });
 
-    // resolve validator
+    // resolve onChange and validation
     await Promise.resolve();
-    // resolve validator promise
+
+    expect(onValidate).toHaveBeenCalledTimes(4);
+    expect(onChange).toHaveBeenCalledTimes(1);
+
+    // resolve validation promise
     await Promise.resolve();
 
     expect(formState).toMatchObject({
       status: 'IDLE',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       error: {
         person: {
           firstName: 'First name Error',
@@ -188,7 +216,8 @@ describe('Form', () => {
 
     expect(formState).toMatchObject({
       status: 'VALIDATING',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       error: undefined,
       dirty: true,
       initialValue: undefined,
@@ -196,16 +225,22 @@ describe('Form', () => {
       value: { person: { firstName: 'a' } },
     });
 
-    // resolve validator
+    // resolve onChange and validation
     await Promise.resolve();
-    // resolve validator promise
+
+    expect(onValidate).toHaveBeenCalledTimes(5);
+    // resolve validation promise
     await Promise.resolve();
+
+    expect(onChange).toHaveBeenCalledTimes(2);
+    expect(onChange).toHaveBeenLastCalledWith({ person: { firstName: 'Normalized' } });
 
     expect(getByTestId('firstName').getAttribute('value')).toBe('Normalized');
 
     expect(formState).toMatchObject({
       status: 'SUBMITTING',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       error: undefined,
       dirty: true,
       initialValue: undefined,
@@ -215,17 +250,14 @@ describe('Form', () => {
 
     // resolve submit handler
     await Promise.resolve();
-    // resolve submit promise
     await Promise.resolve();
-
-    expect(onChange).toHaveBeenCalledTimes(2);
-    expect(onChange).toHaveBeenCalledWith({ person: { firstName: 'Normalized' } });
 
     expect(onSubmit).toHaveBeenNthCalledWith(1, { person: { firstName: 'Normalized' } });
 
     expect(formState).toMatchObject({
       status: 'IDLE',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       error: {
         '': 'Submit error',
       },
@@ -239,7 +271,8 @@ describe('Form', () => {
 
     expect(formState).toMatchObject({
       status: 'VALIDATING',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       error: undefined,
       dirty: true,
       initialValue: undefined,
@@ -251,10 +284,14 @@ describe('Form', () => {
     await Promise.resolve();
     // resolve validator promise
     await Promise.resolve();
+    expect(onChange).toHaveBeenCalledTimes(2);
+    // resolve onChange
+    await Promise.resolve();
 
     expect(formState).toMatchObject({
       status: 'SUBMITTING',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       error: undefined,
       dirty: true,
       initialValue: undefined,
@@ -264,12 +301,13 @@ describe('Form', () => {
 
     // resolve submit handler
     await Promise.resolve();
-    // resolve submit promise
+    // resolve validator promise
     await Promise.resolve();
 
     expect(formState).toMatchObject({
       status: 'IDLE',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       error: {
         '': 'Submit Validation Error',
       },
@@ -283,7 +321,8 @@ describe('Form', () => {
 
     expect(formState).toMatchObject({
       status: 'VALIDATING',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       error: undefined,
       dirty: true,
       initialValue: undefined,
@@ -296,9 +335,13 @@ describe('Form', () => {
     // resolve validator promise
     await Promise.resolve();
 
+    expect(onChange).toHaveBeenCalledTimes(2);
+    expect(onChange).toHaveBeenLastCalledWith({ person: { firstName: 'Normalized' } });
+
     expect(formState).toMatchObject({
       status: 'SUBMITTING',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       error: undefined,
       dirty: true,
       initialValue: undefined,
@@ -313,7 +356,8 @@ describe('Form', () => {
 
     expect(formState).toMatchObject({
       status: 'IDLE',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       error: undefined,
       dirty: true,
       initialValue: undefined,
@@ -326,7 +370,7 @@ describe('Form', () => {
 
   it('works correctly (validate on change)', async () => {
     let formState: any = null;
-    const onChange = jest.fn().mockReturnValue(undefined);
+    const onChange = jest.fn().mockResolvedValue(undefined);
     const onValidate = jest
       .fn()
       .mockRejectedValueOnce(new ValidationError([{ path: [], error: 'Root Error' }]))
@@ -353,26 +397,34 @@ describe('Form', () => {
     // change first name, triggers change
     fireEvent.change(getByTestId('firstName'), { target: { value: 'a' } });
 
-    expect(formState).toMatchObject({ status: 'CHANGING', changingCount: 1 });
+    expect(formState).toMatchObject({
+      status: 'CHANGING',
+      changing: true,
+      changingFields: { person: true },
+    });
 
     // now debounce (propagates that field is changed)
     act(() => jest.runAllTimers());
 
-    expect(onChange).toHaveBeenCalledWith({ person: { firstName: 'a' } });
-    expect(onChange).toHaveBeenCalledTimes(1);
-
-    expect(formState).toMatchObject({ status: 'VALIDATING_ON_CHANGE', changingCount: 0 });
+    expect(formState).toMatchObject({
+      status: 'VALIDATING_ON_CHANGE',
+      changing: false,
+      changingFields: {},
+    });
 
     // resolve validator
     await Promise.resolve();
-    // resolve validator promise
     await Promise.resolve();
+
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onChange).toHaveBeenCalledWith({ person: { firstName: 'a' } });
 
     expect(formState).toMatchObject({
       dirty: true,
       error: { '': 'Root Error' },
       status: 'IDLE',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       value: { person: { firstName: 'a' } },
       valid: false,
     });
@@ -380,26 +432,37 @@ describe('Form', () => {
     // change first name, triggers change
     fireEvent.change(getByTestId('firstName'), { target: { value: 'ab' } });
 
-    expect(formState).toMatchObject({ status: 'CHANGING', changingCount: 1 });
+    expect(formState).toMatchObject({
+      status: 'CHANGING',
+      changing: true,
+      changingFields: { person: true },
+    });
 
     // now debounce (propagates that field is changed)
     act(() => jest.runAllTimers());
 
-    expect(formState).toMatchObject({ status: 'VALIDATING_ON_CHANGE', changingCount: 0 });
-
-    expect(onChange).toHaveBeenCalledWith({ person: { firstName: 'ab' } });
-    expect(onChange).toHaveBeenCalledTimes(2);
+    expect(formState).toMatchObject({
+      status: 'VALIDATING_ON_CHANGE',
+      changing: false,
+      changingFields: {},
+    });
 
     // resolve validator
     await Promise.resolve();
     // resolve validator promise
     await Promise.resolve();
 
+    expect(onChange).toHaveBeenCalledTimes(2);
+    expect(onChange).toHaveBeenLastCalledWith({ person: { firstName: 'ab' } });
+
+    await Promise.resolve();
+
     expect(formState).toMatchObject({
       dirty: true,
       error: { person: 'Object Error' },
       status: 'IDLE',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       value: { person: { firstName: 'ab' } },
       valid: false,
     });
@@ -407,25 +470,37 @@ describe('Form', () => {
     // change first name, triggers change
     fireEvent.change(getByTestId('firstName'), { target: { value: 'abc' } });
 
-    expect(formState).toMatchObject({ status: 'CHANGING', changingCount: 1 });
+    expect(formState).toMatchObject({
+      status: 'CHANGING',
+      changing: true,
+      changingFields: {
+        person: true,
+      },
+    });
 
     // now debounce (propagates that field is changed)
     act(() => jest.runAllTimers());
 
-    expect(formState).toMatchObject({ status: 'VALIDATING_ON_CHANGE', changingCount: 0 });
-    expect(onChange).toHaveBeenCalledWith({ person: { firstName: 'abc' } });
-    expect(onChange).toHaveBeenCalledTimes(3);
+    expect(formState).toMatchObject({
+      status: 'VALIDATING_ON_CHANGE',
+      changing: false,
+      changingFields: {},
+    });
 
     // resolve validator
     await Promise.resolve();
     // resolve validator promise
     await Promise.resolve();
 
+    expect(onChange).toHaveBeenCalledTimes(3);
+    expect(onChange).toHaveBeenLastCalledWith({ person: { firstName: 'abc' } });
+
     expect(formState).toMatchObject({
       dirty: true,
       error: { person: { firstName: 'First name Error' } },
       status: 'IDLE',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       value: { person: { firstName: 'abc' } },
       valid: false,
     });
@@ -433,16 +508,21 @@ describe('Form', () => {
     // change first name, triggers change
     fireEvent.change(getByTestId('firstName'), { target: { value: 'abcd' } });
 
-    expect(formState).toMatchObject({ status: 'CHANGING', changingCount: 1 });
+    expect(formState).toMatchObject({
+      status: 'CHANGING',
+      changing: true,
+      changingFields: {
+        person: true,
+      },
+    });
 
     // now debounce (propagates that field is changed)
     act(() => jest.runAllTimers());
 
-    expect(onChange).toHaveBeenCalledWith({ person: { firstName: 'abcd' } });
-    expect(onChange).toHaveBeenCalledTimes(4);
     expect(formState).toMatchObject({
       status: 'VALIDATING_ON_CHANGE',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       value: { person: { firstName: 'abcd' } },
     });
 
@@ -451,29 +531,16 @@ describe('Form', () => {
     // resolve validator promise
     await Promise.resolve();
 
-    expect(onChange).toHaveBeenCalledWith({ person: { firstName: 'Normalized' } });
     expect(onChange).toHaveBeenCalledTimes(5);
+    expect(onChange).toHaveBeenLastCalledWith({ person: { firstName: 'Normalized' } });
 
-    expect(formState).toMatchObject({
-      status: 'VALIDATING_ON_CHANGE',
-      changingCount: 0,
-      value: { person: { firstName: 'Normalized' } },
-    });
-
-    // resolve validator
-    await Promise.resolve();
-    // resolve validator promise
     await Promise.resolve();
 
-    expect(onChange).toHaveBeenCalledTimes(5);
-
     expect(formState).toMatchObject({
-      dirty: true,
-      error: undefined,
       status: 'IDLE',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       value: { person: { firstName: 'Normalized' } },
-      valid: true,
     });
   });
 });
