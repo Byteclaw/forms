@@ -28,8 +28,8 @@ export function useField<TValue = any>(
   const [propagateChanged, cancelChangedPropagation] = useDebouncedCallback(
     (value: TValue) => {
       changingRef.current = false;
-      formDispatch({ type: 'CHANGED' });
       parentFieldDispatch({ type: 'CHANGE_FIELD', name, value });
+      formDispatch({ type: 'CHANGED' });
     },
     debounceDelay,
     [],

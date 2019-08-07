@@ -15,10 +15,10 @@ export type FormAction<TValue extends { [key: string]: any }> =
   | { type: 'CHANGED' }
   | { type: 'SUBMIT' }
   | { type: 'SUBMITTING_DONE' }
-  | { type: 'SUBMITTING_FAILED' }
+  | { type: 'SUBMITTING_FAILED'; error: string | { [key: string]: any } | undefined }
   | { type: 'VALIDATE' }
   | { type: 'VALIDATING_DONE'; value?: TValue }
-  | { type: 'VALIDATING_FAILED' }
+  | { type: 'VALIDATING_FAILED'; error: string | { [key: string]: any } | undefined }
   | ObjectFieldAction<TValue>;
 
 export function initFormState<TValue extends { [key: string]: any }>(
@@ -48,7 +48,7 @@ export function formReducer<TValue extends { [key: string]: any } = { [key: stri
       return state;
     case 'CHANGED': {
       if (state.status === 'IDLE' || state.status === 'CHANGING') {
-        const changingCount = state.changingCount - 1;
+        const changingCount = Math.max(0, state.changingCount - 1);
 
         return {
           ...state,
@@ -109,7 +109,9 @@ export function formReducer<TValue extends { [key: string]: any } = { [key: stri
       if (state.status === 'VALIDATING' || state.status === 'VALIDATING_ON_CHANGE') {
         return {
           ...state,
+          error: action.error,
           status: 'IDLE',
+          valid: action.error == null,
         };
       }
 
@@ -132,7 +134,9 @@ export function formReducer<TValue extends { [key: string]: any } = { [key: stri
 
       return {
         ...state,
+        error: action.error,
         status: 'IDLE',
+        valid: action.error == null,
       };
     }
     default:

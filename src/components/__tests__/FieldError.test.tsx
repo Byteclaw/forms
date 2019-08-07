@@ -44,18 +44,27 @@ describe('FieldError', () => {
 
     fireEvent.submit(getByTestId('form'));
 
+    // resolve validator
+    await Promise.resolve();
+    // resolve validation promise
     await Promise.resolve();
 
     expect(getByTestId('form-error').innerHTML).toBe('Root Error');
 
     fireEvent.submit(getByTestId('form'));
 
+    // resolve validator
+    await Promise.resolve();
+    // resolve validation promise
     await Promise.resolve();
 
     expect(getByTestId('person-error').innerHTML).toBe('Object Error');
 
     fireEvent.submit(getByTestId('form'));
 
+    // resolve validator
+    await Promise.resolve();
+    // resolve validation promise
     await Promise.resolve();
 
     expect(getByTestId('firstName-error').innerHTML).toBe('First name Error');

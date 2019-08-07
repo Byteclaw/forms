@@ -40,7 +40,8 @@
   ],
   "dependencies": {
     "@types/react": "^16.8.23",
-    "@types/yup": "^0.26.22"
+    "@types/yup": "^0.26.22",
+    "react-fast-compare": "^2.0.4"
   },
   "sideEffects": false,
   "devDependencies": {

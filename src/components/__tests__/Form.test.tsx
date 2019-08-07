@@ -6,6 +6,7 @@ import { Field, Form, FormProvider, ObjectField } from '..';
 describe('Form', () => {
   it('works correctly (validate on submit)', async () => {
     let formState: any = null;
+    const onChange = jest.fn().mockResolvedValue(Promise.resolve());
     const onSubmit = jest
       .fn()
       .mockRejectedValueOnce(new Error('Submit error'))
@@ -23,7 +24,7 @@ describe('Form', () => {
       .mockResolvedValueOnce(Promise.resolve())
       .mockResolvedValueOnce(Promise.resolve());
     const { getByTestId } = render(
-      <Form data-testid="form" onSubmit={onSubmit} onValidate={onValidate}>
+      <Form data-testid="form" onChange={onChange} onSubmit={onSubmit} onValidate={onValidate}>
         <ObjectField name="person">
           <Field data-testid="firstName" name="firstName" />
           <Field data-testid="lastName" name="lastName" />
@@ -60,6 +61,9 @@ describe('Form', () => {
       value: { person: { firstName: 'a' } },
     });
 
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onChange).toHaveBeenCalledWith({ person: { firstName: 'a' } });
+
     // now try to submit and change when is working
     fireEvent.submit(getByTestId('form'));
 
@@ -72,6 +76,9 @@ describe('Form', () => {
       value: { person: { firstName: 'a' } },
     });
 
+    // resolve validator
+    await Promise.resolve();
+    // resolve validator promise
     await Promise.resolve();
 
     expect(formState).toMatchObject({
@@ -98,6 +105,9 @@ describe('Form', () => {
       value: { person: { firstName: 'a' } },
     });
 
+    // resolve validator
+    await Promise.resolve();
+    // resolve validator promise
     await Promise.resolve();
 
     expect(formState).toMatchObject({
@@ -124,6 +134,9 @@ describe('Form', () => {
       value: { person: { firstName: 'a' } },
     });
 
+    // resolve validator
+    await Promise.resolve();
+    // resolve validator promise
     await Promise.resolve();
 
     expect(formState).toMatchObject({
@@ -150,6 +163,9 @@ describe('Form', () => {
       value: { person: { firstName: 'a' } },
     });
 
+    // resolve validator
+    await Promise.resolve();
+    // resolve validator promise
     await Promise.resolve();
 
     expect(formState).toMatchObject({
@@ -180,6 +196,9 @@ describe('Form', () => {
       value: { person: { firstName: 'a' } },
     });
 
+    // resolve validator
+    await Promise.resolve();
+    // resolve validator promise
     await Promise.resolve();
 
     expect(getByTestId('firstName').getAttribute('value')).toBe('Normalized');
@@ -194,7 +213,13 @@ describe('Form', () => {
       value: { person: { firstName: 'Normalized' } },
     });
 
+    // resolve submit handler
     await Promise.resolve();
+    // resolve submit promise
+    await Promise.resolve();
+
+    expect(onChange).toHaveBeenCalledTimes(2);
+    expect(onChange).toHaveBeenCalledWith({ person: { firstName: 'Normalized' } });
 
     expect(onSubmit).toHaveBeenNthCalledWith(1, { person: { firstName: 'Normalized' } });
 
@@ -222,6 +247,9 @@ describe('Form', () => {
       value: { person: { firstName: 'Normalized' } },
     });
 
+    // resolve validator
+    await Promise.resolve();
+    // resolve validator promise
     await Promise.resolve();
 
     expect(formState).toMatchObject({
@@ -234,6 +262,9 @@ describe('Form', () => {
       value: { person: { firstName: 'Normalized' } },
     });
 
+    // resolve submit handler
+    await Promise.resolve();
+    // resolve submit promise
     await Promise.resolve();
 
     expect(formState).toMatchObject({
@@ -260,6 +291,9 @@ describe('Form', () => {
       value: { person: { firstName: 'Normalized' } },
     });
 
+    // resolve validator
+    await Promise.resolve();
+    // resolve validator promise
     await Promise.resolve();
 
     expect(formState).toMatchObject({
@@ -272,6 +306,9 @@ describe('Form', () => {
       value: { person: { firstName: 'Normalized' } },
     });
 
+    // resolve submit handler
+    await Promise.resolve();
+    // resolve submit promise
     await Promise.resolve();
 
     expect(formState).toMatchObject({
@@ -283,10 +320,13 @@ describe('Form', () => {
       valid: true,
       value: { person: { firstName: 'Normalized' } },
     });
+
+    expect(onChange).toBeCalledTimes(2);
   });
 
   it('works correctly (validate on change)', async () => {
     let formState: any = null;
+    const onChange = jest.fn().mockReturnValue(undefined);
     const onValidate = jest
       .fn()
       .mockRejectedValueOnce(new ValidationError([{ path: [], error: 'Root Error' }]))
@@ -296,7 +336,7 @@ describe('Form', () => {
       )
       .mockResolvedValueOnce(Promise.resolve({ person: { firstName: 'Normalized' } }));
     const { getByTestId } = render(
-      <Form data-testid="form" onValidate={onValidate} validateOnChange>
+      <Form data-testid="form" onChange={onChange} onValidate={onValidate} validateOnChange>
         <ObjectField name="person">
           <Field data-testid="firstName" name="firstName" />
           <Field data-testid="lastName" name="lastName" />
@@ -317,11 +357,15 @@ describe('Form', () => {
 
     // now debounce (propagates that field is changed)
     act(() => jest.runAllTimers());
-    // debounce validate on change
-    act(() => jest.runAllTimers());
+
+    expect(onChange).toHaveBeenCalledWith({ person: { firstName: 'a' } });
+    expect(onChange).toHaveBeenCalledTimes(1);
 
     expect(formState).toMatchObject({ status: 'VALIDATING_ON_CHANGE', changingCount: 0 });
 
+    // resolve validator
+    await Promise.resolve();
+    // resolve validator promise
     await Promise.resolve();
 
     expect(formState).toMatchObject({
@@ -340,11 +384,15 @@ describe('Form', () => {
 
     // now debounce (propagates that field is changed)
     act(() => jest.runAllTimers());
-    // debounce validate on change
-    act(() => jest.runAllTimers());
 
     expect(formState).toMatchObject({ status: 'VALIDATING_ON_CHANGE', changingCount: 0 });
 
+    expect(onChange).toHaveBeenCalledWith({ person: { firstName: 'ab' } });
+    expect(onChange).toHaveBeenCalledTimes(2);
+
+    // resolve validator
+    await Promise.resolve();
+    // resolve validator promise
     await Promise.resolve();
 
     expect(formState).toMatchObject({
@@ -363,11 +411,14 @@ describe('Form', () => {
 
     // now debounce (propagates that field is changed)
     act(() => jest.runAllTimers());
-    // debounce validate on change
-    act(() => jest.runAllTimers());
 
     expect(formState).toMatchObject({ status: 'VALIDATING_ON_CHANGE', changingCount: 0 });
+    expect(onChange).toHaveBeenCalledWith({ person: { firstName: 'abc' } });
+    expect(onChange).toHaveBeenCalledTimes(3);
 
+    // resolve validator
+    await Promise.resolve();
+    // resolve validator promise
     await Promise.resolve();
 
     expect(formState).toMatchObject({
@@ -386,12 +437,35 @@ describe('Form', () => {
 
     // now debounce (propagates that field is changed)
     act(() => jest.runAllTimers());
-    // debounce validate on change
-    act(() => jest.runAllTimers());
 
-    expect(formState).toMatchObject({ status: 'VALIDATING_ON_CHANGE', changingCount: 0 });
+    expect(onChange).toHaveBeenCalledWith({ person: { firstName: 'abcd' } });
+    expect(onChange).toHaveBeenCalledTimes(4);
+    expect(formState).toMatchObject({
+      status: 'VALIDATING_ON_CHANGE',
+      changingCount: 0,
+      value: { person: { firstName: 'abcd' } },
+    });
 
+    // resolve validator
     await Promise.resolve();
+    // resolve validator promise
+    await Promise.resolve();
+
+    expect(onChange).toHaveBeenCalledWith({ person: { firstName: 'Normalized' } });
+    expect(onChange).toHaveBeenCalledTimes(5);
+
+    expect(formState).toMatchObject({
+      status: 'VALIDATING_ON_CHANGE',
+      changingCount: 0,
+      value: { person: { firstName: 'Normalized' } },
+    });
+
+    // resolve validator
+    await Promise.resolve();
+    // resolve validator promise
+    await Promise.resolve();
+
+    expect(onChange).toHaveBeenCalledTimes(5);
 
     expect(formState).toMatchObject({
       dirty: true,

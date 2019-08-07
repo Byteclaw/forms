@@ -1,4 +1,5 @@
-import { Dispatch, Reducer, useEffect, useReducer, useRef } from 'react';
+import isEqual from 'react-fast-compare';
+import { Dispatch, Reducer, useReducer, useRef } from 'react';
 import {
   FormState,
   FormAction,
@@ -8,14 +9,14 @@ import {
   ObjectFieldState,
 } from '../reducers';
 import { ValidationError } from './ValidationError';
-import { useDebouncedCallback } from './useDebouncedCallback';
 
 export { FormState, FormAction, ObjectFieldState, ObjectFieldAction };
 
 export function useForm<TValue extends { [key: string]: any } = { [key: string]: any }>(
   initialValue?: TValue,
+  onChange?: (value: Partial<TValue> | undefined) => any,
   onSubmit?: (value: TValue) => Promise<void>,
-  onValidate?: (value: TValue) => Promise<TValue | void>,
+  onValidate?: (value: Partial<TValue> | undefined) => Promise<TValue | void>,
   validateOnChange: boolean = false,
 ): [FormState<TValue>, Dispatch<FormAction<TValue>>] {
   const [state, dispatch] = useReducer(
@@ -23,72 +24,63 @@ export function useForm<TValue extends { [key: string]: any } = { [key: string]:
     initialValue,
     initFormState,
   );
-  const [propagateValidateOnChange, cancelValidateOnChange] = useDebouncedCallback(
-    () => dispatch({ type: 'VALIDATE' }),
-    100,
-    [],
-  );
   const previousFormState = useRef(state);
-
-  // cancel validate on change propagation
-  useEffect(() => {
-    return () => {
-      cancelValidateOnChange();
-    };
-  }, [validateOnChange]);
+  const previousValue = useRef(state.value);
 
   if (previousFormState.current !== state) {
     if (previousFormState.current.status !== state.status) {
       if (state.status === 'VALIDATING' || state.status === 'VALIDATING_ON_CHANGE') {
         dispatch({ type: 'SET_ERROR', error: undefined });
 
-        if (onValidate) {
-          onValidate(state.value!)
-            .then(value => {
-              dispatch({ type: 'VALIDATING_DONE', value: value || undefined });
-            })
-            .catch(e => {
-              // process validation error
-              if (e instanceof ValidationError) {
-                dispatch({ type: 'SET_ERROR', error: e.errors });
-              } else if (e instanceof Error) {
-                dispatch({ type: 'SET_ERROR', error: { '': e.message } });
-              } else {
-                dispatch({ type: 'SET_ERROR', error: { '': '' + e } });
-              }
+        const onValidatePromise = Promise.resolve(onValidate ? onValidate(state.value) : undefined);
 
-              dispatch({ type: 'VALIDATING_FAILED' });
-            });
-        } else {
-          dispatch({ type: 'VALIDATING_DONE' });
-        }
+        onValidatePromise
+          .then(value => {
+            dispatch({ type: 'VALIDATING_DONE', value: value || undefined });
+          })
+          .catch(e => {
+            // process validation error
+            if (e instanceof ValidationError) {
+              dispatch({ type: 'VALIDATING_FAILED', error: e.errors });
+            } else if (e instanceof Error) {
+              dispatch({ type: 'VALIDATING_FAILED', error: { '': e.message } });
+            } else {
+              dispatch({ type: 'VALIDATING_FAILED', error: { '': '' + e } });
+            }
+          });
       } else if (state.status === 'SUBMITTING') {
         // SUBMITTING won't be called if value of form is undefined
-        if (onSubmit) {
-          onSubmit(state.value!)
-            .then(() => {
-              dispatch({ type: 'SUBMITTING_DONE' });
-            })
-            .catch(e => {
-              // process validation error
-              if (e instanceof ValidationError) {
-                dispatch({ type: 'SET_ERROR', error: e.errors });
-              } else if (e instanceof Error) {
-                dispatch({ type: 'SET_ERROR', error: { '': e.message } });
-              } else {
-                dispatch({ type: 'SET_ERROR', error: { '': '' + e } });
-              }
+        const onSubmitPromise = Promise.resolve(onSubmit ? onSubmit(state.value!) : undefined);
 
-              dispatch({ type: 'SUBMITTING_FAILED' });
-            });
-        } else {
-          dispatch({ type: 'SUBMITTING_DONE' });
-        }
+        onSubmitPromise
+          .then(() => {
+            dispatch({ type: 'SUBMITTING_DONE' });
+          })
+          .catch(e => {
+            // process validation error
+            if (e instanceof ValidationError) {
+              dispatch({ type: 'SUBMITTING_FAILED', error: e.errors });
+            } else if (e instanceof Error) {
+              dispatch({ type: 'SUBMITTING_FAILED', error: { '': e.message } });
+            } else {
+              dispatch({ type: 'SUBMITTING_FAILED', error: { '': '' + e } });
+            }
+          });
       }
     }
 
-    if (previousFormState.current.value !== state.value && validateOnChange) {
-      propagateValidateOnChange();
+    if (state.status === 'IDLE') {
+      if (!isEqual(previousValue.current, state.value)) {
+        previousValue.current = state.value;
+
+        if (onChange) {
+          onChange(state.value);
+        }
+
+        if (validateOnChange) {
+          dispatch({ type: 'VALIDATE' });
+        }
+      }
     }
 
     previousFormState.current = state;
@@ -96,7 +88,7 @@ export function useForm<TValue extends { [key: string]: any } = { [key: string]:
 
   // if form is idle or changing and initial value changed, reset everything
   if (
-    state.initialValue !== initialValue &&
+    !isEqual(state.initialValue, initialValue) &&
     (state.status === 'IDLE' || state.status === 'CHANGING')
   ) {
     dispatch({ type: 'SET_INITIAL_VALUE', value: initialValue as TValue });
