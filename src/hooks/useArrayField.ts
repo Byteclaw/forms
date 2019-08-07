@@ -39,7 +39,7 @@ export function useArrayField<TValue extends any[] = any[]>(
     // propagate change
     if (currentState.current.changing !== fieldState.changing) {
       if (fieldState.changing) {
-        parentFieldDispatch({ type: 'CHANGING', name });
+        parentFieldDispatch({ type: 'CHANGING', name: name.toString() });
       } else {
         parentFieldDispatch({
           type: 'CHANGE_FIELD',

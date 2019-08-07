@@ -9,7 +9,7 @@ export interface ParentFieldState<TValue = any[] | { [key: string]: any }> {
 }
 
 export type ParentFieldAction =
-  | { type: 'CHANGING'; name: string | number }
+  | { type: 'CHANGING'; name: string }
   | { type: 'CHANGE_FIELD'; name: string; value: any };
 
 export const CompositeFieldContext = createContext<
