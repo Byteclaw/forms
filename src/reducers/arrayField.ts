@@ -1,4 +1,8 @@
+import isEqual from 'react-fast-compare';
+
 export interface ArrayFieldState<TValue extends any[] = any[]> {
+  changing: boolean;
+  changingFields: { [key: string]: any };
   dirty: boolean;
   error: string | { [key: string]: any } | undefined;
   initialValue: TValue | undefined;
@@ -7,6 +11,7 @@ export interface ArrayFieldState<TValue extends any[] = any[]> {
 }
 
 export type ArrayFieldAction<TValue extends any[] = any[]> =
+  | { type: 'CHANGING'; name: number | string }
   | {
       type: 'CHANGE_FIELD';
       name: number | string;
@@ -20,6 +25,8 @@ export function initArrayFieldState<TValue extends any[] = any[]>(
   initialValue: TValue | undefined,
 ): ArrayFieldState<TValue> {
   return {
+    changing: false,
+    changingFields: new Set(),
     error: undefined,
     dirty: false,
     initialValue,
@@ -33,7 +40,19 @@ export function arrayFieldReducer<TValue extends any[] = any[]>(
   action: ArrayFieldAction<TValue>,
 ): ArrayFieldState<TValue> {
   switch (action.type) {
+    case 'CHANGING': {
+      return {
+        ...state,
+        changing: true,
+        changingFields: {
+          ...state.changingFields,
+          [action.name.toString()]: true,
+        },
+      };
+    }
     case 'CHANGE_FIELD': {
+      const { [action.name.toString()]: a, ...changingFields } = state.changingFields;
+
       if (state.value == null) {
         const value = ([] as any) as TValue;
 
@@ -41,6 +60,8 @@ export function arrayFieldReducer<TValue extends any[] = any[]>(
 
         return {
           ...state,
+          changing: Object.keys(changingFields).length > 0,
+          changingFields,
           dirty: state.initialValue !== value,
           value,
         };
@@ -52,6 +73,8 @@ export function arrayFieldReducer<TValue extends any[] = any[]>(
 
       return {
         ...state,
+        changing: Object.keys(changingFields).length > 0,
+        changingFields,
         dirty: state.initialValue !== value,
         value,
       };
@@ -61,6 +84,8 @@ export function arrayFieldReducer<TValue extends any[] = any[]>(
      */
     case 'SET_INITIAL_VALUE': {
       return {
+        changing: false,
+        changingFields: {},
         error: undefined,
         initialValue: action.value,
         dirty: false,
@@ -75,7 +100,7 @@ export function arrayFieldReducer<TValue extends any[] = any[]>(
     case 'SET_VALUE': {
       return {
         ...state,
-        dirty: state.initialValue !== action.value,
+        dirty: !isEqual(state.initialValue, action.value),
         value: action.value,
       };
     }

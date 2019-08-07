@@ -1,3 +1,4 @@
+/* eslint-disable no-nested-ternary */
 import {
   initObjectFieldState,
   ObjectFieldAction,
@@ -7,26 +8,28 @@ import {
 
 export interface FormState<TValue extends { [key: string]: any }> extends ObjectFieldState<TValue> {
   status: 'IDLE' | 'CHANGING' | 'SUBMITTING' | 'VALIDATING' | 'VALIDATING_ON_CHANGE';
-  changingCount: number;
 }
 
 export type FormAction<TValue extends { [key: string]: any }> =
-  | { type: 'CHANGING' }
-  | { type: 'CHANGED' }
   | { type: 'SUBMIT' }
   | { type: 'SUBMITTING_DONE' }
-  | { type: 'SUBMITTING_FAILED' }
+  | { type: 'SUBMITTING_FAILED'; error: string | { [key: string]: any } | undefined }
   | { type: 'VALIDATE' }
   | { type: 'VALIDATING_DONE'; value?: TValue }
-  | { type: 'VALIDATING_FAILED' }
-  | ObjectFieldAction<TValue>;
+  | { type: 'VALIDATING_FAILED'; error: string | { [key: string]: any } | undefined }
+  | ObjectFieldAction<TValue>
+  | {
+      type: 'CHANGE_FIELD';
+      name: keyof TValue;
+      value: any;
+      validateOnChange: boolean;
+    };
 
 export function initFormState<TValue extends { [key: string]: any }>(
   initialValue: TValue | undefined,
 ): FormState<TValue> {
   return {
     status: 'IDLE',
-    changingCount: 0,
     ...initObjectFieldState(initialValue),
   };
 }
@@ -38,22 +41,26 @@ export function formReducer<TValue extends { [key: string]: any } = { [key: stri
   switch (action.type) {
     case 'CHANGING':
       if (state.status === 'IDLE' || state.status === 'CHANGING') {
+        const nextState = objectFieldReducer(state, action);
+
         return {
-          ...state,
-          status: 'CHANGING',
-          changingCount: state.changingCount + 1,
+          ...nextState,
+          status: nextState.changing ? 'CHANGING' : 'IDLE',
         };
       }
 
       return state;
-    case 'CHANGED': {
+    case 'CHANGE_FIELD': {
       if (state.status === 'IDLE' || state.status === 'CHANGING') {
-        const changingCount = state.changingCount - 1;
+        const nextState = objectFieldReducer(state, action);
 
         return {
-          ...state,
-          status: changingCount === 0 ? 'IDLE' : 'CHANGING',
-          changingCount,
+          ...nextState,
+          status: nextState.changing
+            ? 'CHANGING'
+            : (action as any).validateOnChange
+            ? 'VALIDATING_ON_CHANGE'
+            : 'IDLE',
         };
       }
 
@@ -66,7 +73,9 @@ export function formReducer<TValue extends { [key: string]: any } = { [key: stri
 
       return {
         ...state,
+        error: undefined,
         status: 'VALIDATING',
+        valid: true,
       };
     }
     case 'VALIDATE': {
@@ -76,7 +85,9 @@ export function formReducer<TValue extends { [key: string]: any } = { [key: stri
 
       return {
         ...state,
+        error: undefined,
         status: 'VALIDATING_ON_CHANGE',
+        valid: true,
       };
     }
     case 'VALIDATING_DONE': {
@@ -109,7 +120,9 @@ export function formReducer<TValue extends { [key: string]: any } = { [key: stri
       if (state.status === 'VALIDATING' || state.status === 'VALIDATING_ON_CHANGE') {
         return {
           ...state,
+          error: action.error,
           status: 'IDLE',
+          valid: action.error == null,
         };
       }
 
@@ -132,7 +145,9 @@ export function formReducer<TValue extends { [key: string]: any } = { [key: stri
 
       return {
         ...state,
+        error: action.error,
         status: 'IDLE',
+        valid: action.error == null,
       };
     }
     default:

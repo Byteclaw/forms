@@ -26,7 +26,10 @@ describe('ObjectField', () => {
 
     expect(formState).toMatchObject({
       status: 'CHANGING',
-      changingCount: 1,
+      changing: true,
+      changingFields: {
+        person: true,
+      },
       dirty: false,
       initialValue: undefined,
       value: undefined,
@@ -37,7 +40,8 @@ describe('ObjectField', () => {
 
     expect(formState).toMatchObject({
       status: 'IDLE',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       error: undefined,
       dirty: true,
       initialValue: undefined,
@@ -55,7 +59,8 @@ describe('ObjectField', () => {
 
     expect(formState).toMatchObject({
       status: 'IDLE',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       error: undefined,
       dirty: true,
       initialValue: undefined,
@@ -67,7 +72,8 @@ describe('ObjectField', () => {
 
     expect(formState).toMatchObject({
       status: 'VALIDATING',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       error: undefined,
       dirty: true,
       initialValue: undefined,
@@ -79,18 +85,23 @@ describe('ObjectField', () => {
 
     expect(formState).toMatchObject({
       status: 'VALIDATING',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       error: undefined,
       dirty: true,
       initialValue: undefined,
       value: { person: { firstName: 'abcdef' } },
     });
 
+    // resolve validator
+    await Promise.resolve();
+    // resolve validation promise
     await Promise.resolve();
 
     expect(formState).toMatchObject({
       status: 'SUBMITTING',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       error: undefined,
       dirty: true,
       initialValue: undefined,
@@ -102,18 +113,23 @@ describe('ObjectField', () => {
 
     expect(formState).toMatchObject({
       status: 'SUBMITTING',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       error: undefined,
       dirty: true,
       initialValue: undefined,
       value: { person: { firstName: 'abcdef' } },
     });
 
+    // resolve submit handler
+    await Promise.resolve();
+    // resolve submit promise
     await Promise.resolve();
 
     expect(formState).toMatchObject({
       status: 'IDLE',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       error: undefined,
       dirty: true,
       initialValue: undefined,
@@ -142,7 +158,8 @@ describe('ObjectField', () => {
 
     expect(formState).toMatchObject({
       status: 'IDLE',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       error: undefined,
       dirty: false,
       initialValue: { person: { firstName: 'Fero' } },

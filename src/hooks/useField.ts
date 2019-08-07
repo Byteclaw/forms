@@ -12,7 +12,7 @@ export function useField<TValue = any>(
   name: string,
   debounceDelay: number = 300,
 ): [FieldState<TValue>, Dispatch<FieldAction<TValue>>] {
-  const [formState, formDispatch] = useFormState();
+  const [formState] = useFormState();
   const [parentFieldState, parentFieldDispatch] = useParentField();
   const [initialValue, parentsValue] = useValues<TValue>(name, parentFieldState);
   const error = useError(name, parentFieldState);
@@ -22,13 +22,13 @@ export function useField<TValue = any>(
     initFieldReducer,
   );
 
+  const currentStateRef = useRef(fieldState);
   const changingRef = useRef(false);
   const previousParentsValue = useRef(parentsValue);
 
   const [propagateChanged, cancelChangedPropagation] = useDebouncedCallback(
     (value: TValue) => {
       changingRef.current = false;
-      formDispatch({ type: 'CHANGED' });
       parentFieldDispatch({ type: 'CHANGE_FIELD', name, value });
     },
     debounceDelay,
@@ -43,8 +43,8 @@ export function useField<TValue = any>(
           if (changingRef.current === false) {
             // set as changing
             changingRef.current = true;
-            // propagate change to form
-            formDispatch({ type: 'CHANGING' });
+            // propagate change to parent
+            parentFieldDispatch({ type: 'CHANGING', name });
           }
 
           // propagate change to parent field and form
@@ -54,8 +54,12 @@ export function useField<TValue = any>(
         fieldDispatch(action);
       }
     },
-    [formState.status, formDispatch, fieldDispatch],
+    [formState.status, fieldDispatch],
   );
+
+  if (currentStateRef.current !== fieldState) {
+    currentStateRef.current = fieldState;
+  }
 
   useEffect(() => {
     return () => {
@@ -64,18 +68,17 @@ export function useField<TValue = any>(
 
       if (changingRef.current) {
         changingRef.current = false;
-        formDispatch({ type: 'CHANGED' });
+        parentFieldDispatch({ type: 'CHANGE_FIELD', name, value: currentStateRef.current.value });
       }
     };
-  }, []);
+  }, [name]);
 
   // if initial value changes, set it
   if (initialValue !== fieldState.initialValue) {
-    fieldDispatch({ type: 'SET_INITIAL_VALUE', value: initialValue as TValue });
-  }
+    previousParentsValue.current = initialValue;
 
-  // if value from parent changes, set it's value
-  if (previousParentsValue.current !== parentsValue) {
+    fieldDispatch({ type: 'SET_INITIAL_VALUE', value: initialValue as TValue });
+  } else if (previousParentsValue.current !== parentsValue) {
     previousParentsValue.current = parentsValue;
 
     if (parentsValue !== fieldState.value) {

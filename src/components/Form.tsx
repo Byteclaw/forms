@@ -19,8 +19,13 @@ export interface FormRenderer<TValue extends { [key: string]: any }> {
 export interface FormProps<TValue extends { [key: string]: any }> {
   children: FormRenderer<TValue> | ReactNode;
   initialValue?: TValue;
+  /**
+   * Called after change
+   * The value can be empty or just partial so make sure you can handle these cases too
+   */
+  onChange?: (values: Partial<TValue> | undefined) => Promise<void>;
   onSubmit?: (values: TValue) => Promise<void>;
-  onValidate?: (values: TValue) => Promise<void>;
+  onValidate?: (values: Partial<TValue> | undefined) => Promise<void>;
   validateOnChange?: boolean;
 }
 
@@ -47,6 +52,7 @@ export const Form: FormComponent = function Form({
   as = 'form',
   children,
   initialValue,
+  onChange,
   onSubmit,
   onValidate,
   validateOnChange,
@@ -54,7 +60,7 @@ export const Form: FormComponent = function Form({
 }: FormProps<{ [key: string]: any }> & { as: keyof JSX.IntrinsicElements; [key: string]: any }) {
   const [formState, formDispatch] = useForm<{
     [key: string]: any;
-  }>(initialValue, onSubmit, onValidate, validateOnChange);
+  }>(initialValue, onChange, onSubmit, onValidate, validateOnChange);
   const formStateValue: [typeof formState, typeof formDispatch] = useMemo(
     () => [formState, formDispatch],
     [formState],

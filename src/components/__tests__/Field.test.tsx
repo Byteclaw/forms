@@ -25,7 +25,8 @@ describe('Field', () => {
 
     expect(formState).toMatchObject({
       status: 'CHANGING',
-      changingCount: 1,
+      changing: true,
+      changingFields: {},
       dirty: false,
       initialValue: undefined,
       value: undefined,
@@ -36,7 +37,8 @@ describe('Field', () => {
 
     expect(formState).toMatchObject({
       status: 'IDLE',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       error: undefined,
       dirty: true,
       initialValue: undefined,
@@ -49,12 +51,24 @@ describe('Field', () => {
     fireEvent.change(getByTestId('firstName'), { target: { value: 'abcde' } });
     fireEvent.change(getByTestId('firstName'), { target: { value: 'abcdef' } });
 
+    expect(formState).toMatchObject({
+      status: 'CHANGING',
+      changing: true,
+      changingFields: {
+        firstName: true,
+      },
+      dirty: true,
+      initialValue: undefined,
+      value: { firstName: 'a' },
+    });
+
     // now debounce (propagates that field is changed)
     act(() => jest.runAllTimers());
 
     expect(formState).toMatchObject({
       status: 'IDLE',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       error: undefined,
       dirty: true,
       initialValue: undefined,
@@ -66,7 +80,8 @@ describe('Field', () => {
 
     expect(formState).toMatchObject({
       status: 'VALIDATING',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       error: undefined,
       dirty: true,
       initialValue: undefined,
@@ -78,18 +93,23 @@ describe('Field', () => {
 
     expect(formState).toMatchObject({
       status: 'VALIDATING',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       error: undefined,
       dirty: true,
       initialValue: undefined,
       value: { firstName: 'abcdef' },
     });
 
+    // resolve validator
+    await Promise.resolve();
+    // resolve validation promise
     await Promise.resolve();
 
     expect(formState).toMatchObject({
       status: 'SUBMITTING',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       error: undefined,
       dirty: true,
       initialValue: undefined,
@@ -101,18 +121,23 @@ describe('Field', () => {
 
     expect(formState).toMatchObject({
       status: 'SUBMITTING',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       error: undefined,
       dirty: true,
       initialValue: undefined,
       value: { firstName: 'abcdef' },
     });
 
+    // resolve submit handler
+    await Promise.resolve();
+    // resolve submit promise
     await Promise.resolve();
 
     expect(formState).toMatchObject({
       status: 'IDLE',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       error: undefined,
       dirty: true,
       initialValue: undefined,
@@ -120,7 +145,7 @@ describe('Field', () => {
     });
   });
 
-  it('propagates changed event if unmounted and does not propagate a changed value', async () => {
+  it('propagates changed event if unmounted and propagates a last value', async () => {
     let formState: any = null;
     const onSubmit = jest.fn();
 
@@ -146,7 +171,8 @@ describe('Field', () => {
 
     expect(formState).toMatchObject({
       status: 'CHANGING',
-      changingCount: 1,
+      changing: true,
+      changingFields: { firstName: true },
       error: undefined,
       dirty: false,
       initialValue: undefined,
@@ -160,11 +186,12 @@ describe('Field', () => {
 
     expect(formState).toMatchObject({
       status: 'IDLE',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       error: undefined,
-      dirty: false,
+      dirty: true,
       initialValue: undefined,
-      value: undefined,
+      value: { firstName: 'a' },
     });
   });
 });

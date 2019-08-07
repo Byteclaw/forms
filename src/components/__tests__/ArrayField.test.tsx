@@ -26,7 +26,10 @@ describe('ArrayField', () => {
 
     expect(formState).toMatchObject({
       status: 'CHANGING',
-      changingCount: 1,
+      changing: true,
+      changingFields: {
+        phones: true,
+      },
       dirty: false,
       initialValue: undefined,
       value: undefined,
@@ -37,7 +40,8 @@ describe('ArrayField', () => {
 
     expect(formState).toMatchObject({
       status: 'IDLE',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       error: undefined,
       dirty: true,
       initialValue: undefined,
@@ -50,12 +54,24 @@ describe('ArrayField', () => {
     fireEvent.change(getByTestId('0'), { target: { value: 'abcde' } });
     fireEvent.change(getByTestId('0'), { target: { value: 'abcdef' } });
 
+    expect(formState).toMatchObject({
+      status: 'CHANGING',
+      changing: true,
+      changingFields: {
+        phones: true,
+      },
+      dirty: true,
+      initialValue: undefined,
+      value: { phones: ['a'] },
+    });
+
     // now debounce (propagates that field is changed)
     act(() => jest.runAllTimers());
 
     expect(formState).toMatchObject({
       status: 'IDLE',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       error: undefined,
       dirty: true,
       initialValue: undefined,
@@ -67,7 +83,8 @@ describe('ArrayField', () => {
 
     expect(formState).toMatchObject({
       status: 'VALIDATING',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       error: undefined,
       dirty: true,
       initialValue: undefined,
@@ -79,18 +96,23 @@ describe('ArrayField', () => {
 
     expect(formState).toMatchObject({
       status: 'VALIDATING',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       error: undefined,
       dirty: true,
       initialValue: undefined,
       value: { phones: ['abcdef'] },
     });
 
+    // resolve validator
+    await Promise.resolve();
+    // resolve validation promise
     await Promise.resolve();
 
     expect(formState).toMatchObject({
       status: 'SUBMITTING',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       error: undefined,
       dirty: true,
       initialValue: undefined,
@@ -102,18 +124,23 @@ describe('ArrayField', () => {
 
     expect(formState).toMatchObject({
       status: 'SUBMITTING',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       error: undefined,
       dirty: true,
       initialValue: undefined,
       value: { phones: ['abcdef'] },
     });
 
+    // resolve submit handler
+    await Promise.resolve();
+    // resolve submit promise
     await Promise.resolve();
 
     expect(formState).toMatchObject({
       status: 'IDLE',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       error: undefined,
       dirty: true,
       initialValue: undefined,
@@ -140,9 +167,13 @@ describe('ArrayField', () => {
       </Form>,
     );
 
+    // resolve onChange on form
+    await Promise.resolve();
+
     expect(formState).toMatchObject({
       status: 'IDLE',
-      changingCount: 0,
+      changing: false,
+      changingFields: {},
       error: undefined,
       dirty: false,
       initialValue: { phones: ['abc', 'efg'] },
