@@ -82,13 +82,13 @@ describe('Form', () => {
     });
 
     // resolve validator
-    await Promise.resolve();
+    await act(() => Promise.resolve());
 
     expect(onValidate).toHaveBeenCalledTimes(1);
     expect(onChange).toHaveBeenCalledTimes(1);
 
     // resolve validation promise
-    await Promise.resolve();
+    await act(() => Promise.resolve());
 
     expect(formState).toMatchObject({
       status: 'IDLE',
@@ -117,13 +117,13 @@ describe('Form', () => {
     });
 
     // resolve onChange and validation
-    await Promise.resolve();
+    await act(() => Promise.resolve());
 
     expect(onValidate).toHaveBeenCalledTimes(2);
     expect(onChange).toHaveBeenCalledTimes(1);
 
     // resolve validation promise
-    await Promise.resolve();
+    await act(() => Promise.resolve());
 
     expect(formState).toMatchObject({
       status: 'IDLE',
@@ -152,13 +152,13 @@ describe('Form', () => {
     });
 
     // resolve onChange and validation
-    await Promise.resolve();
+    await act(() => Promise.resolve());
 
     expect(onValidate).toHaveBeenCalledTimes(3);
     expect(onChange).toHaveBeenCalledTimes(1);
 
     // resolve validation promise
-    await Promise.resolve();
+    await act(() => Promise.resolve());
 
     expect(formState).toMatchObject({
       status: 'IDLE',
@@ -187,13 +187,13 @@ describe('Form', () => {
     });
 
     // resolve onChange and validation
-    await Promise.resolve();
+    await act(() => Promise.resolve());
 
     expect(onValidate).toHaveBeenCalledTimes(4);
     expect(onChange).toHaveBeenCalledTimes(1);
 
     // resolve validation promise
-    await Promise.resolve();
+    await act(() => Promise.resolve());
 
     expect(formState).toMatchObject({
       status: 'IDLE',
@@ -209,7 +209,6 @@ describe('Form', () => {
       valid: false,
       value: { person: { firstName: 'a' } },
     });
-
     expect(getByTestId('firstName').getAttribute('aria-invalid')).toBe('true');
 
     fireEvent.submit(getByTestId('form'));
@@ -226,17 +225,12 @@ describe('Form', () => {
     });
 
     // resolve onChange and validation
-    await Promise.resolve();
+    await act(() => Promise.resolve());
 
     expect(onValidate).toHaveBeenCalledTimes(5);
-    // resolve validation promise
-    await Promise.resolve();
-
     expect(onChange).toHaveBeenCalledTimes(2);
     expect(onChange).toHaveBeenLastCalledWith({ person: { firstName: 'Normalized' } });
-
     expect(getByTestId('firstName').getAttribute('value')).toBe('Normalized');
-
     expect(formState).toMatchObject({
       status: 'SUBMITTING',
       changing: false,
@@ -249,11 +243,9 @@ describe('Form', () => {
     });
 
     // resolve submit handler
-    await Promise.resolve();
-    await Promise.resolve();
+    await act(() => Promise.resolve());
 
     expect(onSubmit).toHaveBeenNthCalledWith(1, { person: { firstName: 'Normalized' } });
-
     expect(formState).toMatchObject({
       status: 'IDLE',
       changing: false,
@@ -280,14 +272,10 @@ describe('Form', () => {
       value: { person: { firstName: 'Normalized' } },
     });
 
-    // resolve validator
-    await Promise.resolve();
-    // resolve validator promise
-    await Promise.resolve();
-    expect(onChange).toHaveBeenCalledTimes(2);
-    // resolve onChange
-    await Promise.resolve();
+    // resolve validation
+    await act(() => Promise.resolve());
 
+    expect(onChange).toHaveBeenCalledTimes(2);
     expect(formState).toMatchObject({
       status: 'SUBMITTING',
       changing: false,
@@ -300,9 +288,7 @@ describe('Form', () => {
     });
 
     // resolve submit handler
-    await Promise.resolve();
-    // resolve validator promise
-    await Promise.resolve();
+    await act(() => Promise.resolve());
 
     expect(formState).toMatchObject({
       status: 'IDLE',
@@ -330,14 +316,11 @@ describe('Form', () => {
       value: { person: { firstName: 'Normalized' } },
     });
 
-    // resolve validator
-    await Promise.resolve();
-    // resolve validator promise
-    await Promise.resolve();
+    // resolve validation
+    await act(() => Promise.resolve());
 
     expect(onChange).toHaveBeenCalledTimes(2);
     expect(onChange).toHaveBeenLastCalledWith({ person: { firstName: 'Normalized' } });
-
     expect(formState).toMatchObject({
       status: 'SUBMITTING',
       changing: false,
@@ -350,9 +333,7 @@ describe('Form', () => {
     });
 
     // resolve submit handler
-    await Promise.resolve();
-    // resolve submit promise
-    await Promise.resolve();
+    await act(() => Promise.resolve());
 
     expect(formState).toMatchObject({
       status: 'IDLE',
@@ -364,7 +345,6 @@ describe('Form', () => {
       valid: true,
       value: { person: { firstName: 'Normalized' } },
     });
-
     expect(onChange).toBeCalledTimes(2);
   });
 
@@ -412,9 +392,8 @@ describe('Form', () => {
       changingFields: {},
     });
 
-    // resolve validator
-    await Promise.resolve();
-    await Promise.resolve();
+    // resolve validation
+    await act(() => Promise.resolve());
 
     expect(onChange).toHaveBeenCalledTimes(1);
     expect(onChange).toHaveBeenCalledWith({ person: { firstName: 'a' } });
@@ -447,15 +426,13 @@ describe('Form', () => {
       changingFields: {},
     });
 
-    // resolve validator
-    await Promise.resolve();
-    // resolve validator promise
-    await Promise.resolve();
+    // resolve validation
+    await act(() => Promise.resolve());
 
     expect(onChange).toHaveBeenCalledTimes(2);
     expect(onChange).toHaveBeenLastCalledWith({ person: { firstName: 'ab' } });
 
-    await Promise.resolve();
+    await act(() => Promise.resolve());
 
     expect(formState).toMatchObject({
       dirty: true,
@@ -487,10 +464,8 @@ describe('Form', () => {
       changingFields: {},
     });
 
-    // resolve validator
-    await Promise.resolve();
-    // resolve validator promise
-    await Promise.resolve();
+    // resolve validation
+    await act(() => Promise.resolve());
 
     expect(onChange).toHaveBeenCalledTimes(3);
     expect(onChange).toHaveBeenLastCalledWith({ person: { firstName: 'abc' } });
@@ -526,15 +501,13 @@ describe('Form', () => {
       value: { person: { firstName: 'abcd' } },
     });
 
-    // resolve validator
-    await Promise.resolve();
-    // resolve validator promise
-    await Promise.resolve();
+    // resolve validation
+    await act(() => Promise.resolve());
 
     expect(onChange).toHaveBeenCalledTimes(5);
     expect(onChange).toHaveBeenLastCalledWith({ person: { firstName: 'Normalized' } });
 
-    await Promise.resolve();
+    await act(() => Promise.resolve());
 
     expect(formState).toMatchObject({
       status: 'IDLE',

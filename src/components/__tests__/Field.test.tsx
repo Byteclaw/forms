@@ -101,10 +101,8 @@ describe('Field', () => {
       value: { firstName: 'abcdef' },
     });
 
-    // resolve validator
-    await Promise.resolve();
-    // resolve validation promise
-    await Promise.resolve();
+    // resolve validation
+    await act(() => Promise.resolve());
 
     expect(formState).toMatchObject({
       status: 'SUBMITTING',
@@ -130,9 +128,7 @@ describe('Field', () => {
     });
 
     // resolve submit handler
-    await Promise.resolve();
-    // resolve submit promise
-    await Promise.resolve();
+    await act(() => Promise.resolve());
 
     expect(formState).toMatchObject({
       status: 'IDLE',
