@@ -8085,11 +8085,6 @@ url-template@^2.0.8:
   resolved "https://registry.yarnpkg.com/url-template/-/url-template-2.0.8.tgz#fc565a3cccbff7730c775f5641f9555791439f21"
   integrity sha1-/FZaPMy/93MMd19WQflVV5FDnyE=
 
-use-debounce@^2.2.0:
-  version "2.2.1"
-  resolved "https://registry.yarnpkg.com/use-debounce/-/use-debounce-2.2.1.tgz#0b50e98486a17084c2ba063467ea4cd06071fa3d"
-  integrity sha512-5+8dPOaSecXG+hsjjqDu57k+sIfRLQ2fyRVTq8Q+tK2XYLT3FmBxVy3B+C8l33mLuFkiVu6uE5JqbuQIruxh/g==
-
 use@^3.1.0:
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/use/-/use-3.1.1.tgz#d50c8cac79a19fbc20f2911f56eb973f4e10070f"

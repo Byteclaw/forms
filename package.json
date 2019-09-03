@@ -76,7 +76,6 @@
     "release-it": "^12.3.4",
     "rimraf": "^2.6.3",
     "typescript": "^3.5.3",
-    "use-debounce": "^2.2.0",
     "yup": "^0.27.0"
   },
   "peerDependencies": {
