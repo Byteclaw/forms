@@ -119,7 +119,7 @@
       "maxSize": "4kB"
     },
     {
-      "path": "./dist/index.modern.mjs",
+      "path": "./dist/index.modern.js",
       "maxSize": "4kB"
     },
     {
