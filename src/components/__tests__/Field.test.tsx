@@ -33,7 +33,9 @@ describe('Field', () => {
     });
 
     // now debounce (propagates that field is changed)
-    act(() => jest.runAllTimers());
+    act(() => {
+      jest.runAllTimers();
+    });
 
     expect(formState).toMatchObject({
       status: 'IDLE',
@@ -63,7 +65,9 @@ describe('Field', () => {
     });
 
     // now debounce (propagates that field is changed)
-    act(() => jest.runAllTimers());
+    act(() => {
+      jest.runAllTimers();
+    });
 
     expect(formState).toMatchObject({
       status: 'IDLE',
@@ -178,7 +182,9 @@ describe('Field', () => {
     rerender(<ControlledForm hideInput />);
 
     // now debounce (propagates that field is changed)
-    act(() => jest.runAllTimers());
+    act(() => {
+      jest.runAllTimers();
+    });
 
     expect(formState).toMatchObject({
       status: 'IDLE',

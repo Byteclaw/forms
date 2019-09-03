@@ -53,7 +53,9 @@ describe('Form', () => {
     });
 
     // now debounce (propagates that field is changed)
-    act(() => jest.runAllTimers());
+    act(() => {
+      jest.runAllTimers();
+    });
 
     expect(onChange).toHaveBeenCalledTimes(1);
     expect(onChange).toHaveBeenLastCalledWith({ person: { firstName: 'a' } });
@@ -384,7 +386,9 @@ describe('Form', () => {
     });
 
     // now debounce (propagates that field is changed)
-    act(() => jest.runAllTimers());
+    act(() => {
+      jest.runAllTimers();
+    });
 
     expect(formState).toMatchObject({
       status: 'VALIDATING_ON_CHANGE',
@@ -418,7 +422,9 @@ describe('Form', () => {
     });
 
     // now debounce (propagates that field is changed)
-    act(() => jest.runAllTimers());
+    act(() => {
+      jest.runAllTimers();
+    });
 
     expect(formState).toMatchObject({
       status: 'VALIDATING_ON_CHANGE',
@@ -456,7 +462,9 @@ describe('Form', () => {
     });
 
     // now debounce (propagates that field is changed)
-    act(() => jest.runAllTimers());
+    act(() => {
+      jest.runAllTimers();
+    });
 
     expect(formState).toMatchObject({
       status: 'VALIDATING_ON_CHANGE',
@@ -492,7 +500,9 @@ describe('Form', () => {
     });
 
     // now debounce (propagates that field is changed)
-    act(() => jest.runAllTimers());
+    act(() => {
+      jest.runAllTimers();
+    });
 
     expect(formState).toMatchObject({
       status: 'VALIDATING_ON_CHANGE',

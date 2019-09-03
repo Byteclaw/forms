@@ -36,7 +36,9 @@ describe('ArrayField', () => {
     });
 
     // now debounce (propagates that field is changed)
-    act(() => jest.runAllTimers());
+    act(() => {
+      jest.runAllTimers();
+    });
 
     expect(formState).toMatchObject({
       status: 'IDLE',
@@ -66,7 +68,9 @@ describe('ArrayField', () => {
     });
 
     // now debounce (propagates that field is changed)
-    act(() => jest.runAllTimers());
+    act(() => {
+      jest.runAllTimers();
+    });
 
     expect(formState).toMatchObject({
       status: 'IDLE',

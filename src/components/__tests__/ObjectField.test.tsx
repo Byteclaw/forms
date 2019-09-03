@@ -36,7 +36,9 @@ describe('ObjectField', () => {
     });
 
     // now debounce (propagates that field is changed)
-    act(() => jest.runAllTimers());
+    act(() => {
+      jest.runAllTimers();
+    });
 
     expect(formState).toMatchObject({
       status: 'IDLE',
@@ -55,7 +57,9 @@ describe('ObjectField', () => {
     fireEvent.change(getByTestId('firstName'), { target: { value: 'abcdef' } });
 
     // now debounce (propagates that field is changed)
-    act(() => jest.runAllTimers());
+    act(() => {
+      jest.runAllTimers();
+    });
 
     expect(formState).toMatchObject({
       status: 'IDLE',

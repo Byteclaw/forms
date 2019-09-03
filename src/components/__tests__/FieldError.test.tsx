@@ -40,31 +40,27 @@ describe('FieldError', () => {
 
     fireEvent.change(getByTestId('firstName'), { target: { value: 'a' } });
 
-    act(() => jest.runAllTimers());
+    act(() => {
+      jest.runAllTimers();
+    });
 
     fireEvent.submit(getByTestId('form'));
 
-    // resolve validator
-    await act(() => Promise.resolve());
-    // resolve validation promise
+    // resolve validation
     await act(() => Promise.resolve());
 
     expect(getByTestId('form-error').innerHTML).toBe('Root Error');
 
     fireEvent.submit(getByTestId('form'));
 
-    // resolve validator
-    await act(() => Promise.resolve());
-    // resolve validation promise
+    // resolve validation
     await act(() => Promise.resolve());
 
     expect(getByTestId('person-error').innerHTML).toBe('Object Error');
 
     fireEvent.submit(getByTestId('form'));
 
-    // resolve validator
-    await act(() => Promise.resolve());
-    // resolve validation promise
+    // resolve validation
     await act(() => Promise.resolve());
 
     expect(getByTestId('firstName-error').innerHTML).toBe('First name Error');
