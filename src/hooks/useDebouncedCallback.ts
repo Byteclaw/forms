@@ -6,9 +6,14 @@ export function useDebouncedCallback<T extends (...args: any[]) => any>(
   deps: any[],
 ): [T, Function] {
   const currentTimeout = useRef<any>();
+  const callbackRef = useRef<T>(callback);
   const cancel = useCallback(() => {
     clearTimeout(currentTimeout.current);
   }, []);
+
+  if (callbackRef.current !== callback) {
+    callbackRef.current = callback;
+  }
 
   // cancel timeout if unmounted
   useEffect(() => {
@@ -21,7 +26,7 @@ export function useDebouncedCallback<T extends (...args: any[]) => any>(
     (...args: any) => {
       clearTimeout(currentTimeout.current);
 
-      currentTimeout.current = setTimeout(callback, delay, ...args);
+      currentTimeout.current = setTimeout(callbackRef.current, delay, ...args);
     },
     [delay, ...deps],
   );
