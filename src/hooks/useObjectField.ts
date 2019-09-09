@@ -35,31 +35,34 @@ export function useObjectField<TValue extends { [key: string]: any } = { [key: s
     [formState.status],
   );
 
-  // if initial value changes, set it
-  if (!isEqual(initialValue, fieldState.initialValue)) {
-    fieldDispatch({ type: 'SET_INITIAL_VALUE', value: initialValue as TValue });
-  }
-
-  // if value from parent changes, set it's value
-  if (!isEqual(currentParentsValueRef.current, parentsValue)) {
-    currentParentsValueRef.current = parentsValue;
-
-    if (parentsValue !== fieldState.value) {
-      fieldDispatch({ type: 'SET_VALUE', value: parentsValue as TValue });
-    }
-  }
-
   if (currentStateRef.current !== fieldState) {
     // propagate change
     if (currentStateRef.current.changing !== fieldState.changing) {
       if (fieldState.changing) {
         parentFieldDispatch({ type: 'CHANGING', name });
-      } else {
+      } /* else {
         parentFieldDispatch({ type: 'CHANGE_FIELD', name, value: fieldState.value });
-      }
+      } */
+    }
+
+    // propagate value change
+    if (!isEqual(currentStateRef.current.value, fieldState.value)) {
+      // this also sets the field as not changing
+      parentFieldDispatch({ type: 'CHANGE_FIELD', name, value: fieldState.value });
     }
 
     currentStateRef.current = fieldState;
+  }
+
+  // if initial value changes, set it
+  if (!isEqual(initialValue, fieldState.initialValue)) {
+    fieldDispatch({ type: 'SET_INITIAL_VALUE', value: initialValue as TValue });
+  } else if (!isEqual(currentParentsValueRef.current, parentsValue)) {
+    currentParentsValueRef.current = parentsValue;
+
+    if (parentsValue !== fieldState.value) {
+      fieldDispatch({ type: 'SET_VALUE', value: parentsValue as TValue });
+    }
   }
 
   // set field as changed on unmount

@@ -62,7 +62,7 @@ export function arrayFieldReducer<TValue extends any[] = any[]>(
           ...state,
           changing: Object.keys(changingFields).length > 0,
           changingFields,
-          dirty: state.initialValue !== value,
+          dirty: !isEqual(state.initialValue, value),
           value,
         };
       }
@@ -75,7 +75,7 @@ export function arrayFieldReducer<TValue extends any[] = any[]>(
         ...state,
         changing: Object.keys(changingFields).length > 0,
         changingFields,
-        dirty: state.initialValue !== value,
+        dirty: !isEqual(state.initialValue, value),
         value,
       };
     }

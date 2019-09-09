@@ -52,16 +52,14 @@ export function objectFieldReducer<TValue extends { [key: string]: any } = { [ke
     }
     case 'CHANGE_FIELD': {
       const { [action.name]: a, ...changingFields } = state.changingFields;
+      const newValue = { ...state.value, [action.name]: action.value } as TValue;
 
       return {
         ...state,
         changing: Object.keys(changingFields).length > 0,
         changingFields,
-        dirty: true,
-        value: {
-          ...state.value,
-          [action.name]: action.value,
-        } as TValue,
+        dirty: !isEqual(state.value, newValue),
+        value: newValue,
       };
     }
     /**

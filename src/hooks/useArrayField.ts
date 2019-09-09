@@ -40,13 +40,22 @@ export function useArrayField<TValue extends any[] = any[]>(
     if (currentState.current.changing !== fieldState.changing) {
       if (fieldState.changing) {
         parentFieldDispatch({ type: 'CHANGING', name: name.toString() });
-      } else {
+      } /* else {
         parentFieldDispatch({
           type: 'CHANGE_FIELD',
           name: name.toString(),
           value: fieldState.value,
         });
-      }
+      } */
+    }
+
+    if (!isEqual(currentState.current.value, fieldState.value)) {
+      // this also sets the field as not changing
+      parentFieldDispatch({
+        type: 'CHANGE_FIELD',
+        name: name.toString(),
+        value: fieldState.value,
+      });
     }
 
     currentState.current = fieldState;
