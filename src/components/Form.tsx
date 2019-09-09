@@ -84,3 +84,5 @@ export const Form: FormComponent = function Form({
     </FormStateContext.Provider>
   );
 } as any;
+
+Form.displayName = 'Form';
