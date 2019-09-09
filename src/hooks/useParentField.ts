@@ -16,6 +16,8 @@ export const CompositeFieldContext = createContext<
   [ParentFieldState<any>, Dispatch<ParentFieldAction>]
 >(undefined as any);
 
+CompositeFieldContext.displayName = 'FormCompositeFieldContext';
+
 export function useParentField<TValue = any[] | { [key: string]: any }>(): [
   ParentFieldState<TValue>,
   Dispatch<ParentFieldAction>,

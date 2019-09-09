@@ -5,6 +5,8 @@ export const FormStateContext = createContext<
   [FormState<{ [key: string]: any }>, Dispatch<FormAction<{ [key: string]: any }>>]
 >(undefined as any);
 
+FormStateContext.displayName = 'FormStateContext';
+
 export function useFormState<TValue extends { [key: string]: any } = { [key: string]: any }>(): [
   FormState<TValue>,
   Dispatch<FormAction<TValue>>,
