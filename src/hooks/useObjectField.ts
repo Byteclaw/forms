@@ -13,6 +13,7 @@ import { useError } from './useError';
 
 export function useObjectField<TValue extends { [key: string]: any } = { [key: string]: any }>(
   name: string,
+  removeOnUnmount: boolean = false,
 ): [ObjectFieldState<TValue>, Dispatch<ObjectFieldAction<TValue>>] {
   const [formState] = useFormState();
   const [parentFieldState, parentFieldDispatch] = useParentField();
@@ -69,8 +70,12 @@ export function useObjectField<TValue extends { [key: string]: any } = { [key: s
   useEffect(() => {
     return () => {
       parentFieldDispatch({ type: 'CHANGE_FIELD', name, value: currentStateRef.current.value });
+
+      if (removeOnUnmount) {
+        parentFieldDispatch({ type: 'REMOVE_FIELD', name });
+      }
     };
-  }, [name]);
+  }, [name, removeOnUnmount]);
 
   // if error is changed, propagate down
   if (error !== fieldState.error) {

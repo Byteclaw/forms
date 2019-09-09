@@ -13,6 +13,7 @@ import { useError } from './useError';
 
 export function useArrayField<TValue extends any[] = any[]>(
   name: string | number,
+  removeOnUnmount: boolean = false,
 ): [ArrayFieldState<TValue>, Dispatch<ArrayFieldAction<TValue>>] {
   const [formState] = useFormState();
   const [parentFieldState, parentFieldDispatch] = useParentField();
@@ -82,8 +83,12 @@ export function useArrayField<TValue extends any[] = any[]>(
         name: name.toString(),
         value: currentState.current.value,
       });
+
+      if (removeOnUnmount) {
+        parentFieldDispatch({ type: 'REMOVE_FIELD', name: name.toString() });
+      }
     };
-  }, [name]);
+  }, [name, removeOnUnmount]);
 
   // if error is changed, propagate down
   if (error !== fieldState.error) {

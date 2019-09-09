@@ -11,6 +11,7 @@ export { FieldState, FieldAction };
 export function useField<TValue = any>(
   name: string,
   debounceDelay: number = 300,
+  removeOnUnmount: boolean = false,
 ): [FieldState<TValue>, Dispatch<FieldAction<TValue>>] {
   const [formState] = useFormState();
   const [parentFieldState, parentFieldDispatch] = useParentField();
@@ -70,8 +71,12 @@ export function useField<TValue = any>(
         changingRef.current = false;
         parentFieldDispatch({ type: 'CHANGE_FIELD', name, value: currentStateRef.current.value });
       }
+
+      if (removeOnUnmount) {
+        parentFieldDispatch({ type: 'REMOVE_FIELD', name });
+      }
     };
-  }, [name]);
+  }, [name, removeOnUnmount]);
 
   // if initial value changes, set it
   if (initialValue !== fieldState.initialValue) {

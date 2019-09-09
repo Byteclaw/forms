@@ -10,7 +10,8 @@ export interface ParentFieldState<TValue = any[] | { [key: string]: any }> {
 
 export type ParentFieldAction =
   | { type: 'CHANGING'; name: string }
-  | { type: 'CHANGE_FIELD'; name: string; value: any };
+  | { type: 'CHANGE_FIELD'; name: string; value: any }
+  | { type: 'REMOVE_FIELD'; name: string };
 
 export const CompositeFieldContext = createContext<
   [ParentFieldState<any>, Dispatch<ParentFieldAction>]
