@@ -17,6 +17,7 @@ export type ArrayFieldAction<TValue extends any[] = any[]> =
       name: number | string;
       value: TValue extends (infer I)[] ? I : any;
     }
+  | { type: 'REMOVE_FIELD'; name: number | string }
   | { type: 'SET_INITIAL_VALUE'; value: TValue }
   | { type: 'SET_VALUE'; value: TValue }
   | { type: 'SET_ERROR'; error: string | { [key: string]: any } | undefined };
@@ -77,6 +78,23 @@ export function arrayFieldReducer<TValue extends any[] = any[]>(
         changingFields,
         dirty: !isEqual(state.initialValue, value),
         value,
+      };
+    }
+    case 'REMOVE_FIELD': {
+      // remove from changing fields
+      const { [action.name.toString()]: a, ...changingFields } = state.changingFields;
+      let newValue = (state.value || (([] as any) as TValue)).slice() as TValue;
+      newValue = [
+        ...newValue.slice(0, Number(action.name)),
+        ...newValue.slice(Number(action.name) + 1),
+      ] as TValue;
+
+      return {
+        ...state,
+        changing: Object.keys(changingFields).length > 0,
+        changingFields,
+        dirty: !isEqual(state.initialValue, newValue),
+        value: newValue,
       };
     }
     /**

@@ -180,4 +180,101 @@ describe('ArrayField', () => {
       value: { phones: ['abc', 'efg'] },
     });
   });
+
+  it('removes a value on unmount', async () => {
+    let formState: any = null;
+    const onSubmit = jest.fn().mockResolvedValue(Promise.resolve());
+    const onValidate = jest.fn().mockResolvedValue(Promise.resolve());
+    const { getByTestId, rerender } = render(
+      <Form data-testid="form" onSubmit={onSubmit} onValidate={onValidate}>
+        <ArrayField name="phones" removeOnUnmount>
+          <Field data-testid="0" name="0" removeOnUnmount />
+        </ArrayField>
+        <FormProvider>
+          {state => {
+            formState = state;
+            return null;
+          }}
+        </FormProvider>
+      </Form>,
+    );
+
+    // change first name, triggers change
+    fireEvent.change(getByTestId('0'), { target: { value: 'a' } });
+
+    expect(formState).toMatchObject({
+      status: 'CHANGING',
+      changing: true,
+      changingFields: {
+        phones: true,
+      },
+      dirty: false,
+      initialValue: undefined,
+      value: undefined,
+    });
+
+    // now debounce (propagates that field is changed)
+    act(() => {
+      jest.runAllTimers();
+    });
+
+    expect(formState).toMatchObject({
+      status: 'IDLE',
+      changing: false,
+      changingFields: {},
+      error: undefined,
+      dirty: true,
+      initialValue: undefined,
+      value: { phones: ['a'] },
+    });
+
+    rerender(
+      <Form data-testid="form" onSubmit={onSubmit} onValidate={onValidate}>
+        <ArrayField name="phones" removeOnUnmount />
+        <FormProvider>
+          {state => {
+            formState = state;
+            return null;
+          }}
+        </FormProvider>
+      </Form>,
+    );
+
+    // resolve onChange on form
+    await act(() => Promise.resolve());
+
+    expect(formState).toMatchObject({
+      status: 'IDLE',
+      changing: false,
+      changingFields: {},
+      error: undefined,
+      dirty: true,
+      initialValue: undefined,
+    });
+    expect(formState.value).toEqual({ phones: [] });
+
+    rerender(
+      <Form data-testid="form" onSubmit={onSubmit} onValidate={onValidate}>
+        <FormProvider>
+          {state => {
+            formState = state;
+            return null;
+          }}
+        </FormProvider>
+      </Form>,
+    );
+
+    // resolve onChange on form
+    await act(() => Promise.resolve());
+
+    expect(formState).toMatchObject({
+      status: 'IDLE',
+      changing: false,
+      changingFields: {},
+      error: undefined,
+      dirty: true,
+      initialValue: undefined,
+    });
+    expect(formState.value).toEqual({});
+  });
 });

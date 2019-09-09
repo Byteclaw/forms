@@ -24,6 +24,7 @@ export interface FieldProps<TValue> {
    */
   debounceDelay?: number;
   name: string;
+  removeOnUnmount?: boolean;
 }
 
 interface FieldComponent {
@@ -44,11 +45,12 @@ export const Field: FieldComponent = forwardRef(
       children,
       debounceDelay,
       name,
+      removeOnUnmount,
       ...restProps
     }: FieldProps<any> & { as: keyof JSX.IntrinsicElements },
     ref,
   ) => {
-    const [fieldState, fieldDispatch] = useField<any>(name, debounceDelay);
+    const [fieldState, fieldDispatch] = useField<any>(name, debounceDelay, removeOnUnmount);
     const onBlur: FocusEventHandler = useCallback(() => fieldDispatch({ type: 'BLUR' }), [
       fieldDispatch,
     ]);

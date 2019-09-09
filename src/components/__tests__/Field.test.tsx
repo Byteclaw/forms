@@ -196,4 +196,71 @@ describe('Field', () => {
       value: { firstName: 'a' },
     });
   });
+
+  it('removes a value on unmount', async () => {
+    let formState: any = null;
+    const onSubmit = jest.fn().mockResolvedValue(Promise.resolve());
+    const onValidate = jest.fn().mockResolvedValue(Promise.resolve());
+    const { getByTestId, rerender } = render(
+      <Form data-testid="form" onSubmit={onSubmit} onValidate={onValidate}>
+        <Field data-testid="firstName" name="firstName" removeOnUnmount />
+        <Field data-testid="lastName" name="lastName" />
+        <FormProvider>
+          {state => {
+            formState = state;
+            return null;
+          }}
+        </FormProvider>
+      </Form>,
+    );
+
+    // change first name, triggers change
+    fireEvent.change(getByTestId('firstName'), { target: { value: 'a' } });
+
+    expect(formState).toMatchObject({
+      status: 'CHANGING',
+      changing: true,
+      changingFields: {},
+      dirty: false,
+      initialValue: undefined,
+      value: undefined,
+    });
+
+    // now debounce (propagates that field is changed)
+    act(() => {
+      jest.runAllTimers();
+    });
+
+    expect(formState).toMatchObject({
+      status: 'IDLE',
+      changing: false,
+      changingFields: {},
+      error: undefined,
+      dirty: true,
+      initialValue: undefined,
+      value: { firstName: 'a' },
+    });
+
+    rerender(
+      <Form data-testid="form" onSubmit={onSubmit} onValidate={onValidate}>
+        <Field data-testid="lastName" name="lastName" />
+        <FormProvider>
+          {state => {
+            formState = state;
+            return null;
+          }}
+        </FormProvider>
+      </Form>,
+    );
+
+    expect(formState).toMatchObject({
+      status: 'IDLE',
+      changing: false,
+      changingFields: {},
+      error: undefined,
+      dirty: true,
+      initialValue: undefined,
+    });
+    expect(formState.value).toEqual({});
+  });
 });

@@ -21,6 +21,7 @@ export interface ObjectFieldRenderer<TValue extends { [key: string]: any }> {
 export interface ObjectFieldProps<TValue extends { [key: string]: any }> {
   children?: ObjectFieldRenderer<TValue> | ReactNode;
   name: string;
+  removeOnUnmount?: boolean;
 }
 
 interface ObjectFieldComponent {
@@ -48,11 +49,12 @@ export const ObjectField: ObjectFieldComponent = forwardRef(
       as: As = Fragment,
       children,
       name,
+      removeOnUnmount,
       ...restProps
     }: ObjectFieldProps<{ [key: string]: any }> & { as: any },
     ref,
   ) => {
-    const state = useObjectField<{ [key: string]: any }>(name);
+    const state = useObjectField<{ [key: string]: any }>(name, removeOnUnmount);
 
     return (
       <CompositeFieldContext.Provider value={state}>

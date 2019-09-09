@@ -21,6 +21,7 @@ export interface ArrayFieldRenderer<TValue extends any[]> {
 export interface ArrayFieldProps<TValue extends any[]> {
   children?: ArrayFieldRenderer<TValue> | ReactNode;
   name: string | number;
+  removeOnUnmount?: boolean;
 }
 
 interface ArrayFieldComponent {
@@ -36,10 +37,16 @@ interface ArrayFieldComponent {
 
 export const ArrayField: ArrayFieldComponent = forwardRef(
   (
-    { as: As = Fragment, children, name, ...restProps }: ArrayFieldProps<any[]> & { as: any },
+    {
+      as: As = Fragment,
+      children,
+      name,
+      removeOnUnmount,
+      ...restProps
+    }: ArrayFieldProps<any[]> & { as: any },
     ref,
   ) => {
-    const state = useArrayField<any[]>(name);
+    const state = useArrayField<any[]>(name, removeOnUnmount);
 
     return (
       <CompositeFieldContext.Provider value={state}>

@@ -17,6 +17,7 @@ export type ObjectFieldAction<TValue extends { [key: string]: any } = { [key: st
       name: keyof TValue;
       value: any;
     }
+  | { type: 'REMOVE_FIELD'; name: string }
   | { type: 'SET_INITIAL_VALUE'; value: TValue }
   | { type: 'SET_VALUE'; value: TValue }
   | { type: 'SET_ERROR'; error: string | { [key: string]: any } | undefined };
@@ -58,8 +59,20 @@ export function objectFieldReducer<TValue extends { [key: string]: any } = { [ke
         ...state,
         changing: Object.keys(changingFields).length > 0,
         changingFields,
-        dirty: !isEqual(state.value, newValue),
+        dirty: !isEqual(state.initialValue, newValue),
         value: newValue,
+      };
+    }
+    case 'REMOVE_FIELD': {
+      const { [action.name]: a, ...changingFields } = state.changingFields;
+      const { [action.name]: aVal, ...restValues } = state.value || ({} as TValue);
+
+      return {
+        ...state,
+        changing: Object.keys(changingFields).length > 0,
+        changingFields,
+        dirty: !isEqual(state.initialValue, restValues),
+        value: restValues as TValue,
       };
     }
     /**
