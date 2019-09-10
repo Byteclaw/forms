@@ -277,4 +277,42 @@ describe('ArrayField', () => {
     });
     expect(formState.value).toEqual({});
   });
+
+  it('allows to set whole value on custom input', async () => {
+    let formState: any = null;
+    const onSubmit = jest.fn().mockResolvedValue(Promise.resolve());
+    const onValidate = jest.fn().mockResolvedValue(Promise.resolve());
+    const { getByTestId } = render(
+      <Form data-testid="form" onSubmit={onSubmit} onValidate={onValidate}>
+        <ArrayField name="phones">
+          {(_, dispatch) => (
+            <button
+              data-testid="set"
+              onClick={() => dispatch({ type: 'CHANGE', value: ['a', 'b'] })}
+              type="button"
+            />
+          )}
+        </ArrayField>
+        <FormProvider>
+          {state => {
+            formState = state;
+            return null;
+          }}
+        </FormProvider>
+      </Form>,
+    );
+
+    // click the button
+    fireEvent.click(getByTestId('set'));
+
+    expect(formState).toMatchObject({
+      status: 'IDLE',
+      changing: false,
+      changingFields: {},
+      error: undefined,
+      dirty: true,
+      initialValue: undefined,
+      value: { phones: ['a', 'b'] },
+    });
+  });
 });
