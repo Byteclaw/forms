@@ -526,4 +526,42 @@ describe('Form', () => {
       value: { person: { firstName: 'Normalized' } },
     });
   });
+
+  it('allows to set whole value on custom input', async () => {
+    let formState: any = null;
+    const onSubmit = jest.fn().mockResolvedValue(Promise.resolve());
+    const onValidate = jest.fn().mockResolvedValue(Promise.resolve());
+    const { getByTestId } = render(
+      <Form data-testid="form" onSubmit={onSubmit} onValidate={onValidate}>
+        <ObjectField name="person">
+          {(_, dispatch) => (
+            <button
+              data-testid="set"
+              onClick={() => dispatch({ type: 'CHANGE', value: { firstName: 'a' } })}
+              type="button"
+            />
+          )}
+        </ObjectField>
+        <FormProvider>
+          {state => {
+            formState = state;
+            return null;
+          }}
+        </FormProvider>
+      </Form>,
+    );
+
+    // click the button
+    fireEvent.click(getByTestId('set'));
+
+    expect(formState).toMatchObject({
+      status: 'IDLE',
+      changing: false,
+      changingFields: {},
+      error: undefined,
+      dirty: true,
+      initialValue: undefined,
+      value: { person: { firstName: 'a' } },
+    });
+  });
 });

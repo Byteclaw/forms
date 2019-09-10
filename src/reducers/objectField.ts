@@ -17,6 +17,7 @@ export type ObjectFieldAction<TValue extends { [key: string]: any } = { [key: st
       name: keyof TValue;
       value: any;
     }
+  | { type: 'CHANGE'; value: TValue }
   | { type: 'REMOVE_FIELD'; name: string }
   | { type: 'SET_INITIAL_VALUE'; value: TValue }
   | { type: 'SET_VALUE'; value: TValue }
@@ -61,6 +62,16 @@ export function objectFieldReducer<TValue extends { [key: string]: any } = { [ke
         changingFields,
         dirty: !isEqual(state.initialValue, newValue),
         value: newValue,
+      };
+    }
+    case 'CHANGE': {
+      // this is similar to SET_VALUE except this causes reset of field from userland and not from Form
+      return {
+        ...state,
+        changing: false,
+        changingFields: {},
+        dirty: !isEqual(state.initialValue, action.value),
+        value: action.value,
       };
     }
     case 'REMOVE_FIELD': {

@@ -17,6 +17,7 @@ export type ArrayFieldAction<TValue extends any[] = any[]> =
       name: number | string;
       value: TValue extends (infer I)[] ? I : any;
     }
+  | { type: 'CHANGE'; value: TValue }
   | { type: 'REMOVE_FIELD'; name: number | string }
   | { type: 'SET_INITIAL_VALUE'; value: TValue }
   | { type: 'SET_VALUE'; value: TValue }
@@ -78,6 +79,16 @@ export function arrayFieldReducer<TValue extends any[] = any[]>(
         changingFields,
         dirty: !isEqual(state.initialValue, value),
         value,
+      };
+    }
+    case 'CHANGE': {
+      // this is similar to SET_VALUE except this causes reset of field from userland and not from Form
+      return {
+        ...state,
+        changing: false,
+        changingFields: {},
+        dirty: !isEqual(state.initialValue, action.value),
+        value: action.value,
       };
     }
     case 'REMOVE_FIELD': {
