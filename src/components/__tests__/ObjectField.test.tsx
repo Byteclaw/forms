@@ -259,4 +259,89 @@ describe('ObjectField', () => {
     });
     expect(formState.value).toEqual({});
   });
+
+  it('keeps value on remount', async () => {
+    let formState: any = null;
+    const onSubmit = jest.fn().mockResolvedValue(Promise.resolve());
+    const onValidate = jest.fn().mockResolvedValue(Promise.resolve());
+    const { getByTestId, rerender } = render(
+      <Form data-testid="form" onSubmit={onSubmit} onValidate={onValidate}>
+        <ObjectField name="person0">
+          <Field data-testid="person0-name" name="name" />
+        </ObjectField>
+        <ObjectField name="person1" removeOnUnmount>
+          <Field data-testid="person1-name" name="name" />
+        </ObjectField>
+        <FormProvider>
+          {state => {
+            formState = state;
+            return null;
+          }}
+        </FormProvider>
+      </Form>,
+    );
+
+    // change first name, triggers change
+    fireEvent.change(getByTestId('person0-name'), { target: { value: 'a' } });
+    fireEvent.change(getByTestId('person1-name'), { target: { value: 'b' } });
+
+    // now debounce (propagates that field is changed)
+    act(() => {
+      jest.runAllTimers();
+    });
+
+    expect(formState).toMatchObject({
+      status: 'IDLE',
+      changing: false,
+      changingFields: {},
+      error: undefined,
+      dirty: true,
+      initialValue: undefined,
+      value: {
+        person0: { name: 'a' },
+        person1: { name: 'b' },
+      },
+    });
+
+    rerender(
+      <Form data-testid="form" onSubmit={onSubmit} onValidate={onValidate}>
+        <FormProvider>
+          {state => {
+            formState = state;
+            return null;
+          }}
+        </FormProvider>
+      </Form>,
+    );
+
+    expect(formState).toMatchObject({
+      status: 'IDLE',
+      changing: false,
+      changingFields: {},
+      error: undefined,
+      dirty: true,
+      initialValue: undefined,
+      value: { person0: { name: 'a' } },
+    });
+
+    rerender(
+      <Form data-testid="form" onSubmit={onSubmit} onValidate={onValidate}>
+        <ObjectField name="person0">
+          <Field data-testid="person0-name" name="name" />
+        </ObjectField>
+        <ObjectField name="person1" removeOnUnmount>
+          <Field data-testid="person1-name" name="name" />
+        </ObjectField>
+        <FormProvider>
+          {state => {
+            formState = state;
+            return null;
+          }}
+        </FormProvider>
+      </Form>,
+    );
+
+    expect((getByTestId('person0-name') as HTMLInputElement).value).toBe('a');
+    expect((getByTestId('person1-name') as HTMLInputElement).value).toBe('');
+  });
 });

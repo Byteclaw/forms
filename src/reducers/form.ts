@@ -30,7 +30,7 @@ export function initFormState<TValue extends { [key: string]: any }>(
 ): FormState<TValue> {
   return {
     status: 'IDLE',
-    ...initObjectFieldState(initialValue),
+    ...initObjectFieldState([initialValue, undefined]),
   };
 }
 

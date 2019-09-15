@@ -264,7 +264,7 @@ describe('Field', () => {
     expect(formState.value).toEqual({});
   });
 
-  it('keep value on remount', async () => {
+  it('keeps value on remount', async () => {
     let formState: any = null;
     const onSubmit = jest.fn().mockResolvedValue(Promise.resolve());
     const onValidate = jest.fn().mockResolvedValue(Promise.resolve());

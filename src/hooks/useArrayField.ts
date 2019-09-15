@@ -21,7 +21,7 @@ export function useArrayField<TValue extends any[] = any[]>(
   const error = useError(name.toString(), parentFieldState);
   const [fieldState, fieldDispatch] = useReducer(
     arrayFieldReducer as Reducer<ArrayFieldState<TValue>, ArrayFieldAction<TValue>>,
-    initialValue,
+    [initialValue, parentsValue] as [TValue | undefined, TValue | undefined],
     initArrayFieldState,
   );
   const currentState = useRef(fieldState);

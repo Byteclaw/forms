@@ -23,9 +23,10 @@ export type ArrayFieldAction<TValue extends any[] = any[]> =
   | { type: 'SET_VALUE'; value: TValue }
   | { type: 'SET_ERROR'; error: string | { [key: string]: any } | undefined };
 
-export function initArrayFieldState<TValue extends any[] = any[]>(
-  initialValue: TValue | undefined,
-): ArrayFieldState<TValue> {
+export function initArrayFieldState<TValue extends any[] = any[]>([initialValue, value]: [
+  TValue | undefined,
+  TValue | undefined,
+]): ArrayFieldState<TValue> {
   return {
     changing: false,
     changingFields: new Set(),
@@ -33,7 +34,7 @@ export function initArrayFieldState<TValue extends any[] = any[]>(
     dirty: false,
     initialValue,
     valid: true,
-    value: initialValue,
+    value: value || initialValue,
   };
 }
 

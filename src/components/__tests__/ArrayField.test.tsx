@@ -315,4 +315,89 @@ describe('ArrayField', () => {
       value: { phones: ['a', 'b'] },
     });
   });
+
+  it('keeps value on remount', async () => {
+    let formState: any = null;
+    const onSubmit = jest.fn().mockResolvedValue(Promise.resolve());
+    const onValidate = jest.fn().mockResolvedValue(Promise.resolve());
+    const { getByTestId, rerender } = render(
+      <Form data-testid="form" onSubmit={onSubmit} onValidate={onValidate}>
+        <ArrayField name="phones0">
+          <Field data-testid="phones0-0" name={0} />
+        </ArrayField>
+        <ArrayField name="phones1" removeOnUnmount>
+          <Field data-testid="phones1-0" name={0} />
+        </ArrayField>
+        <FormProvider>
+          {state => {
+            formState = state;
+            return null;
+          }}
+        </FormProvider>
+      </Form>,
+    );
+
+    // change first name, triggers change
+    fireEvent.change(getByTestId('phones0-0'), { target: { value: 'a' } });
+    fireEvent.change(getByTestId('phones1-0'), { target: { value: 'b' } });
+
+    // now debounce (propagates that field is changed)
+    act(() => {
+      jest.runAllTimers();
+    });
+
+    expect(formState).toMatchObject({
+      status: 'IDLE',
+      changing: false,
+      changingFields: {},
+      error: undefined,
+      dirty: true,
+      initialValue: undefined,
+      value: {
+        phones0: ['a'],
+        phones1: ['b'],
+      },
+    });
+
+    rerender(
+      <Form data-testid="form" onSubmit={onSubmit} onValidate={onValidate}>
+        <FormProvider>
+          {state => {
+            formState = state;
+            return null;
+          }}
+        </FormProvider>
+      </Form>,
+    );
+
+    expect(formState).toMatchObject({
+      status: 'IDLE',
+      changing: false,
+      changingFields: {},
+      error: undefined,
+      dirty: true,
+      initialValue: undefined,
+      value: { phones0: ['a'] },
+    });
+
+    rerender(
+      <Form data-testid="form" onSubmit={onSubmit} onValidate={onValidate}>
+        <ArrayField name="phones0">
+          <Field data-testid="phones0-0" name={0} />
+        </ArrayField>
+        <ArrayField name="phones1" removeOnUnmount>
+          <Field data-testid="phones1-0" name={0} />
+        </ArrayField>
+        <FormProvider>
+          {state => {
+            formState = state;
+            return null;
+          }}
+        </FormProvider>
+      </Form>,
+    );
+
+    expect((getByTestId('phones0-0') as HTMLInputElement).value).toBe('a');
+    expect((getByTestId('phones1-0') as HTMLInputElement).value).toBe('');
+  });
 });
