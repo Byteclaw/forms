@@ -17,9 +17,10 @@ export type FieldAction<TValue = any> =
   | { type: 'SET_VALUE'; value: TValue }
   | { type: 'SET_ERROR'; error: string | undefined };
 
-export function initFieldReducer<TValue = any>(
-  initialValue: TValue | undefined,
-): FieldState<TValue> {
+export function initFieldReducer<TValue = any>([initialValue, value]: [
+  TValue | undefined,
+  TValue | undefined,
+]): FieldState<TValue> {
   return {
     error: undefined,
     focused: false,
@@ -28,7 +29,7 @@ export function initFieldReducer<TValue = any>(
     previousValue: initialValue,
     touched: false,
     valid: true,
-    value: initialValue,
+    value: value || initialValue,
   };
 }
 
