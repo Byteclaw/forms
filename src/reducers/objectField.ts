@@ -25,7 +25,7 @@ export type ObjectFieldAction<TValue extends { [key: string]: any } = { [key: st
 
 export function initObjectFieldState<
   TValue extends { [key: string]: any } = { [key: string]: any }
->(initialValue: TValue | undefined): ObjectFieldState<TValue> {
+>([initialValue, value]: [TValue | undefined, TValue | undefined]): ObjectFieldState<TValue> {
   return {
     changing: false,
     changingFields: {},
@@ -33,7 +33,7 @@ export function initObjectFieldState<
     dirty: false,
     initialValue,
     valid: true,
-    value: initialValue,
+    value: value || initialValue,
   };
 }
 

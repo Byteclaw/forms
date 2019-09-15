@@ -21,7 +21,7 @@ export function useObjectField<TValue extends { [key: string]: any } = { [key: s
   const error = useError(name, parentFieldState);
   const [fieldState, fieldDispatch] = useReducer(
     objectFieldReducer as Reducer<ObjectFieldState<TValue>, ObjectFieldAction<TValue>>,
-    initialValue,
+    [initialValue, parentsValue] as [TValue | undefined, TValue | undefined],
     initObjectFieldState,
   );
   const currentStateRef = useRef(fieldState);
