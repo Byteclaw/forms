@@ -19,7 +19,7 @@ export function useField<TValue = any>(
   const error = useError(name, parentFieldState);
   const [fieldState, fieldDispatch] = useReducer(
     fieldReducer as Reducer<FieldState<TValue>, FieldAction<TValue>>,
-    initialValue,
+    [initialValue, parentsValue] as [TValue | undefined, TValue | undefined],
     initFieldReducer,
   );
 

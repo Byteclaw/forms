@@ -263,4 +263,78 @@ describe('Field', () => {
     });
     expect(formState.value).toEqual({});
   });
+
+  it('keep value on remount', async () => {
+    let formState: any = null;
+    const onSubmit = jest.fn().mockResolvedValue(Promise.resolve());
+    const onValidate = jest.fn().mockResolvedValue(Promise.resolve());
+    const { getByTestId, rerender } = render(
+      <Form data-testid="form" onSubmit={onSubmit} onValidate={onValidate}>
+        <Field data-testid="firstName" name="firstName" />
+        <Field data-testid="lastName" name="lastName" removeOnUnmount />
+        <FormProvider>
+          {state => {
+            formState = state;
+            return null;
+          }}
+        </FormProvider>
+      </Form>,
+    );
+
+    // change first name, triggers change
+    fireEvent.change(getByTestId('firstName'), { target: { value: 'a' } });
+    fireEvent.change(getByTestId('lastName'), { target: { value: 'b' } });
+
+    // now debounce (propagates that field is changed)
+    act(() => {
+      jest.runAllTimers();
+    });
+
+    expect(formState).toMatchObject({
+      status: 'IDLE',
+      changing: false,
+      changingFields: {},
+      error: undefined,
+      dirty: true,
+      initialValue: undefined,
+      value: { firstName: 'a', lastName: 'b' },
+    });
+
+    rerender(
+      <Form data-testid="form" onSubmit={onSubmit} onValidate={onValidate}>
+        <FormProvider>
+          {state => {
+            formState = state;
+            return null;
+          }}
+        </FormProvider>
+      </Form>,
+    );
+
+    expect(formState).toMatchObject({
+      status: 'IDLE',
+      changing: false,
+      changingFields: {},
+      error: undefined,
+      dirty: true,
+      initialValue: undefined,
+      value: { firstName: 'a' },
+    });
+
+    rerender(
+      <Form data-testid="form" onSubmit={onSubmit} onValidate={onValidate}>
+        <Field data-testid="firstName" name="firstName" />
+        <Field data-testid="lastName" name="lastName" removeOnUnmount />
+        <FormProvider>
+          {state => {
+            formState = state;
+            return null;
+          }}
+        </FormProvider>
+      </Form>,
+    );
+
+    expect((getByTestId('firstName') as HTMLInputElement).value).toBe('a');
+    expect((getByTestId('lastName') as HTMLInputElement).value).toBe('');
+  });
 });
