@@ -1,6 +1,8 @@
 import isEqual from 'react-fast-compare';
 import { Dispatch, Reducer, useReducer, useRef, useCallback } from 'react';
 import {
+  ArrayFieldAction,
+  ArrayFieldState,
   FormState,
   FormAction,
   formReducer,
@@ -10,7 +12,14 @@ import {
 } from '../reducers';
 import { ValidationError } from './ValidationError';
 
-export { FormState, FormAction, ObjectFieldState, ObjectFieldAction };
+export {
+  ArrayFieldAction,
+  ArrayFieldState,
+  FormState,
+  FormAction,
+  ObjectFieldState,
+  ObjectFieldAction,
+};
 
 export function useForm<TValue extends { [key: string]: any } = { [key: string]: any }>(
   initialValue?: TValue,
