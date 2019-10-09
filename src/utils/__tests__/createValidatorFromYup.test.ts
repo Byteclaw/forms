@@ -43,5 +43,8 @@ describe('createValidatorFromYup', () => {
         { path: ['email'], error: 'required' },
       ]),
     );
+    await expect(
+      onValidate({ arr: [{ color: '#fff' }], email: 'test@test.com', password: 'test' }),
+    ).resolves.toEqual({ arr: [{ color: '#fff' }], email: 'test@test.com', password: 'test' });
   });
 });
