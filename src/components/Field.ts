@@ -69,6 +69,7 @@ export const Field: FieldComponent = forwardRef(
     return createElement(as, {
       ...restProps,
       'aria-invalid': !fieldState.valid,
+      children,
       name,
       onBlur,
       onChange,
