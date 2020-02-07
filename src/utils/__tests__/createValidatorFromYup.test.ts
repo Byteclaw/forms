@@ -18,6 +18,10 @@ describe('createValidatorFromYup', () => {
                   .string()
                   .typeError('string')
                   .required('required'),
+                test: yup
+                  .string()
+                  .typeError('string')
+                  .required('required'),
               })
               .required('required'),
           )
@@ -44,7 +48,20 @@ describe('createValidatorFromYup', () => {
       ]),
     );
     await expect(
-      onValidate({ arr: [{ color: '#fff' }], email: 'test@test.com', password: 'test' }),
-    ).resolves.toEqual({ arr: [{ color: '#fff' }], email: 'test@test.com', password: 'test' });
+      onValidate({ arr: [{ color: '#fff', test: 't' }], email: 'test@test.com', password: 'test' }),
+    ).resolves.toEqual({
+      arr: [{ color: '#fff', test: 't' }],
+      email: 'test@test.com',
+      password: 'test',
+    });
+    await expect(onValidateAll({ arr: [{}] })).rejects.toEqual(
+      new ValidationError([
+        { path: [''], error: '4 errors occurred' },
+        { path: ['arr', 0, 'color'], error: 'required' },
+        { path: ['arr', 0, 'test'], error: 'required' },
+        { path: ['password'], error: 'required' },
+        { path: ['email'], error: 'required' },
+      ]),
+    );
   });
 });
