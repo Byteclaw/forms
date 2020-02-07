@@ -7,15 +7,44 @@
 
 Easily create complex forms in [React](https://github.com/facebook/react).
 
+- [Installation](#installation)
+- [Yup compatibility](#yup-compatibility)
+- [Requirements](#requirements)
+- [Up and running example](#up-and-running-example)
+- [API](#api)
+  - [Form](#form)
+  - [Field](#field)
+  - [FieldError](#field-error)
+  - [ArrayField](#array-field)
+  - [ObjectField](#object-field)
+  - [ValidationError](#validation-error)
+  - [useArrayField](#use-array-field)
+  - [useDebouncedCallback](#use-debounced-callback)
+  - [useError](#use-error)
+  - [useField](#use-field)
+  - [useForm](#use-form)
+  - [useFormState](#use-form-state)
+  - [useObjectField](#use-object-field)
+  - [useParentField](#use-parent-field)
+  - [useValues](#use-values)
+  - [createValidatorFromYup](#create-validator-from-yup)
+  - [validationErrorFromYupError](#validation-error-from-yup-error)
+- [Examples](#examples)
+- [Contributions](#contributions)
+
 ## Installation
 
 ```console
-npm install @byteclaw/forms yup
+npm install @byteclaw/forms
 
 # or using yarn
 
-yarn add @byteclaw/forms yup
+yarn add @byteclaw/forms
 ```
+
+## Yup compatibility
+
+This library supports [Yup](https://github.com/jquense/yup) validation library. In order to use it please install [Yup](https://github.com/jquense/yup) because it isn't a part of this library.
 
 ## Requirements
 
@@ -65,7 +94,7 @@ const validator = createValidatorFromYup(
   <Field name="productTitle" />
   <FieldError name="productTitle">{({ error }) => error || null}</FieldError>
   <ArrayField name="images">
-    {({ value, addItem, removeItem }) => (
+    {({ value }, dispatch) => (
       <Fragment>
         {/* value can be undefined/null if is not initialized */}
         {(value || []).map((val, i) => (
@@ -79,7 +108,7 @@ const validator = createValidatorFromYup(
             </button>
           </ObjectField>
         ))}
-        <button onClick={() => addItem()} type="button">
+        <button onClick={() => dispatch({ type: 'CHANGE', value: [...value, {}] })} type="button">
           Add image
         </button>
       </Fragment>
@@ -93,13 +122,90 @@ const validator = createValidatorFromYup(
   <FieldError name="attributes">{({ error }) => error || null}</FieldError>
   <FormProvider>
     {form => (
-      <button disabled={form.changing || form.submitting || form.validating} type="submit">
+      <button disabled={form.status !== 'IDLE'} type="submit">
         Save
       </button>
     )}
   </FormProvider>
 </Form>;
 ```
+
+## API
+
+### [Form](./src/components/Form.tsx)
+
+`Form` component is a root component necessary to use Forms at all. It provides a context for all fields in a given form.
+
+Form accepts `onValidate`, `onSubmit` and `validateOnChange` props along with standard attributes accepted by `<form />`.
+
+- `onValidate<TValues>(values?: TValues): Promise<TValues | void>`
+  - optional validation function
+  - in case of an error please throw [`ValidationError`](#validation-error) provided by this library
+- `onSubmit<TValues>(values: TValues): Promise<void>`
+  - optional submit function
+  - it can validate form too, in case of an error throw [`ValidationError`](#validation-error) provided by this library
+- `onChange<TValues>(values: TValues): Promise<void>`
+  - optional on change function
+- `validateOnChange`
+  - default is `false`
+  - optional
+  - will validate form on change
+
+### [FormProvider](./src/components/FormProvider.ts)
+
+`FormProvider` is a way to connect to `FormState` when you need to react on something.
+
+- `children: (state: FormState) => any`
+
+### [Field](./src/components/Field.ts)
+
+`Field` is a base component to construct simple widgets using `<input />` elements. On change is debounced.
+
+### [FieldError](./src/components/FieldError.ts)
+
+`FieldError` is a base component if you want to render validation errors that are connected with a specific field or a form root.
+
+To connect to a root of ObjectField/ArrayField/Form use it like this:
+
+```jsx
+<FieldError name="">{err => JSON.stringify(err, null, ' ')}<FieldError>
+```
+
+Or specify `name` as a name that was used by `Field` component.
+
+### [ArrayField](./src/components/ArrayField.tsx)
+
+`ArrayField` is a base component to construct complex fields for array values.
+
+### [ObjectField](./src/components/ObjectField.tsx)
+
+`ObjectField` is a base component to construct nested objects in your form.
+
+### [ValidationError](./src/components/ValidationError.ts)
+
+`ValidationError` is a way how to map errors to fields in your form.
+
+### [useArrayField](./src/hooks/useArrayField.ts)
+
+### [useDebouncedCallback](./src/hooks/useDebouncedCallback.ts)
+
+### [useError](./src/hooks/useError.ts)
+
+### [useForm](./src/hooks/useForm.ts)
+
+### [useField](./src/hooks/useField.ts)
+
+### [useFormState](./src/hooks/useFormState.ts)
+
+### [useObjectField](./src/hooks/useObjectField.ts)
+
+### [useParentField](./src/hooks/useParentField.ts)
+
+### [useValues](./src/hooks/useValues.ts)
+
+### [createValidationErrorFromYup](./src/utils/createValidationErrorFromYup.ts)
+
+### [validationErrorFromYupError](./src/utils/validationErrorFromYupError.ts)
 
 ## Examples
 

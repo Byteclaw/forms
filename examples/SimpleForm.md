@@ -39,9 +39,7 @@ function App() {
         <Field name="password" placeholder="password" type="password" />
         <FieldError name="password">{({ error }) => error || null}</FieldError>
         <FormProvider>
-          {form => (
-            <button disabled={form.submitting || form.changing || form.validating}>Log in</button>
-          )}
+          {form => <button disabled={form.status !== 'IDLE'}>Log in</button>}
         </FormProvider>
       </Form>
     </div>
