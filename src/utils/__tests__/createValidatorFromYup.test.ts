@@ -26,6 +26,13 @@ describe('createValidatorFromYup', () => {
               .required('required'),
           )
           .required('required'),
+        nested: yup
+          .object()
+          .shape({
+            color: yup.string().required('required'),
+            test: yup.string().required('required'),
+          })
+          .required(),
         email: yup
           .string()
           .email()
@@ -41,24 +48,34 @@ describe('createValidatorFromYup', () => {
     );
     await expect(onValidateAll({})).rejects.toEqual(
       new ValidationError([
-        { path: [''], error: '3 errors occurred' },
+        { path: [''], error: '5 errors occurred' },
         { path: ['arr'], error: 'required' },
         { path: ['password'], error: 'required' },
+        { path: ['nested', 'color'], error: 'required' },
+        { path: ['nested', 'test'], error: 'required' },
         { path: ['email'], error: 'required' },
       ]),
     );
     await expect(
-      onValidate({ arr: [{ color: '#fff', test: 't' }], email: 'test@test.com', password: 'test' }),
+      onValidate({
+        arr: [{ color: '#fff', test: 't' }],
+        nested: { color: '#fff', test: 't' },
+        email: 'test@test.com',
+        password: 'test',
+      }),
     ).resolves.toEqual({
       arr: [{ color: '#fff', test: 't' }],
+      nested: { color: '#fff', test: 't' },
       email: 'test@test.com',
       password: 'test',
     });
     await expect(onValidateAll({ arr: [{}] })).rejects.toEqual(
       new ValidationError([
-        { path: [''], error: '4 errors occurred' },
+        { path: [''], error: '6 errors occurred' },
         { path: ['arr', 0, 'color'], error: 'required' },
         { path: ['arr', 0, 'test'], error: 'required' },
+        { path: ['nested', 'color'], error: 'required' },
+        { path: ['nested', 'test'], error: 'required' },
         { path: ['password'], error: 'required' },
         { path: ['email'], error: 'required' },
       ]),
