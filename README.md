@@ -1,6 +1,6 @@
 # @byteclaw/forms
 
-![CircleCI](https://img.shields.io/circleci/project/github/Byteclaw/forms/master.svg?style=flat-square)
+[![CircleCI](https://img.shields.io/circleci/project/github/Byteclaw/forms/master.svg?style=flat-square)](https://circleci.com/gh/Byteclaw/forms)
 [![All Contributors](https://img.shields.io/badge/all_contributors-2-orange.svg?style=flat-square)](#contributors)
 ![Version](https://img.shields.io/npm/v/@byteclaw/forms.svg?style=flat-square)
 ![License](https://img.shields.io/npm/l/@byteclaw/forms.svg?style=flat-square)
